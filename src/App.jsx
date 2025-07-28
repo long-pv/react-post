@@ -5,7 +5,20 @@ import Home from './pages/Home';
 import PostList from './pages/PostList';
 import PostDetail from './pages/PostDetail';
 
+// redux store
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { getOptions } from "./store/options/optionsSlice";
+
 function App() {
+  
+  // luôn gọi 1 lần duy nhất mỗi lần load app
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getOptions()); 
+  }, [dispatch]);
+
+  // Router
   return (
     <Router>
       <Header />
