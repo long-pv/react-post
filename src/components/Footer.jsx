@@ -1,4 +1,3 @@
-import React from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -33,8 +32,7 @@ const Footer = () => {
 
             {loading ? (
               <div className="d-flex align-items-center gap-2">
-                <ClipLoader size={24} color="#ffffff" />
-                <span>Đang tải dữ liệu...</span>
+                <ClipLoader size={32} color="#ffffff" />
               </div>
             ) : lienHe ? (
               <div dangerouslySetInnerHTML={{ __html: lienHe }} />
