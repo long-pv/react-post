@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import PostList from './pages/PostList';
 import PostDetail from './pages/PostDetail';
+import Search from './pages/Search';
 
 // redux store
 import { useEffect } from "react";
@@ -32,6 +33,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/posts" element={<PostList />} />
           <Route path="/posts/:id" element={<PostDetail />} />
+          <Route path="/search" element={<Search />} />
         </Routes>
       </main>
       <Footer />

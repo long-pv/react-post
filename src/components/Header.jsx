@@ -24,12 +24,12 @@ const Header = () => {
             Bài viết
           </NavLink>
           <NavLink
-            to="/about"
+            to="/search"
             className={({ isActive }) =>
               `text-white text-decoration-none ${isActive ? 'fw-bold' : ''}`
             }
           >
-            Giới thiệu
+            Tìm kiếm
           </NavLink>
         </nav>
       </div>
