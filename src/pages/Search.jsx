@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { searchPosts, clearSearchResults } from "../store/search/searchSlice";
 import { Link } from "react-router-dom";
@@ -7,7 +7,13 @@ import ClipLoader from "react-spinners/ClipLoader";
 const Search = () => {
   const [keyword, setKeyword] = useState("");
   const dispatch = useDispatch();
-  const { data, loading, error } = useSelector((state) => state.search);
+    const { data, loading, error } = useSelector((state) => state.search);
+    
+    // Clear dữ liệu khi trang vừa load
+    useEffect(() => {
+        dispatch(clearSearchResults());
+        setKeyword("");
+    }, [dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
