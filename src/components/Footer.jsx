@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
 
 const Footer = () => {
-  const { data, loading } = useSelector((state) => state.options);
-  const lienHe = data?.lien_he;
+  const { data : dataOptions, loading : loadingOptions } = useSelector((state) => state.options);
+  const { data : dataPosts, loading : loadingPosts } = useSelector((state) => state.posts);
+  const lienHe = dataOptions?.lien_he;
+  const gioi_thieu = dataOptions?.gioi_thieu;
 
   return (
     <footer className="bg-dark text-white py-4 mt-5">
@@ -13,31 +15,49 @@ const Footer = () => {
           {/* Cột 1 - Logo */}
           <div className="col-md-4 mb-3">
             <h5 className="text-uppercase">React Post</h5>
-            <p>Simple Blog built with React + WordPress (Headless).</p>
+            {loadingOptions ? (
+              <div className="d-flex align-items-center gap-2">
+                <ClipLoader size={32} color="#ffffff" />
+              </div>
+            ) : gioi_thieu ? (
+                <div>{ gioi_thieu }</div>
+            ) : (
+              <p>Không có dữ liệu.</p>
+            )}
           </div>
 
           {/* Cột 2 - Bài viết mới (fix cứng tạm) */}
           <div className="col-md-4 mb-3">
             <h5 className="text-uppercase">Bài viết mới</h5>
-            <ul className="list-unstyled">
-              <li><Link to="/posts/post-1" className="text-white">Post 1</Link></li>
-              <li><Link to="/posts/post-2" className="text-white">Post 2</Link></li>
-              <li><Link to="/posts/post-3" className="text-white">Post 3</Link></li>
-            </ul>
+            {loadingPosts ? (
+              <ClipLoader size={32} color="#ffffff" />
+            ) : dataPosts ? (
+              <ul className="list-unstyled">
+                {dataPosts.map((post) => (
+                  <li key={post.id}>
+                    <Link to={`/posts/${post.id}`} className="text-white">
+                      {post.title.rendered}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+                 <p>Không có dữ liệu.</p>
+            )}
           </div>
 
           {/* Cột 3 - Liên hệ */}
           <div className="col-md-4 mb-3">
             <h5 className="text-uppercase">Liên hệ</h5>
 
-            {loading ? (
+            {loadingOptions ? (
               <div className="d-flex align-items-center gap-2">
                 <ClipLoader size={32} color="#ffffff" />
               </div>
             ) : lienHe ? (
               <div dangerouslySetInnerHTML={{ __html: lienHe }} />
             ) : (
-              <p>Không có dữ liệu liên hệ.</p>
+              <p>Không có dữ liệu.</p>
             )}
           </div>
         </div>

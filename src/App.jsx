@@ -9,13 +9,18 @@ import PostDetail from './pages/PostDetail';
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getOptions } from "./store/options/optionsSlice";
+import { getLatestPosts } from "./store/posts/postsSlice";
 
 function App() {
   
   // luôn gọi 1 lần duy nhất mỗi lần load app
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(getOptions()); 
+    const fetchInitialData = () => {
+      dispatch(getOptions());
+      dispatch(getLatestPosts());
+    };
+    fetchInitialData();
   }, [dispatch]);
 
   // Router
@@ -26,7 +31,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/posts" element={<PostList />} />
-          <Route path="/posts/:slug" element={<PostDetail />} />
+          <Route path="/posts/:id" element={<PostDetail />} />
         </Routes>
       </main>
       <Footer />
