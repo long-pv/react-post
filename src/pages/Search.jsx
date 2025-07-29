@@ -3,24 +3,33 @@ import { useDispatch, useSelector } from "react-redux";
 import { searchPosts, clearSearchResults } from "../store/search/searchSlice";
 import { Link } from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
+import { useSearchParams } from "react-router-dom";
 
 const Search = () => {
-  const [keyword, setKeyword] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialKeyword = searchParams.get("key") || "";
+  const [keyword, setKeyword] = useState(initialKeyword);
   const dispatch = useDispatch();
-    const { data, loading, error } = useSelector((state) => state.search);
-    
-    // Clear dữ liệu khi trang vừa load
-    useEffect(() => {
-        dispatch(clearSearchResults());
-        setKeyword("");
-    }, [dispatch]);
+  const { data, loading, error } = useSelector((state) => state.search);
+
+  // Gọi tìm kiếm nếu có ?key= trên URL
+  useEffect(() => {
+    if (initialKeyword.trim() !== "") {
+      dispatch(searchPosts(initialKeyword));
+    } else {
+      dispatch(clearSearchResults());
+    }
+  }, [dispatch, initialKeyword]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (keyword.trim() !== "") {
-      dispatch(searchPosts(keyword));
+    const key_trimmed = keyword.trim();
+
+    if (key_trimmed !== "") {
+      setSearchParams({ key: key_trimmed });
     } else {
       dispatch(clearSearchResults());
+      setSearchParams({});
     }
   };
 
@@ -69,7 +78,10 @@ const Search = () => {
                       className="card-title"
                       dangerouslySetInnerHTML={{ __html: post.title.rendered }}
                     />
-                    <Link to={`/posts/${post.id}`} className="btn btn-sm btn-outline-primary">
+                    <Link
+                      to={`/posts/${post.id}`}
+                      className="btn btn-sm btn-outline-primary"
+                    >
                       Xem chi tiết
                     </Link>
                   </div>
