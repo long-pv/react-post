@@ -27,7 +27,7 @@ function App() {
             <Route path="/search" element={<Search />} />
           </Routes>
         </main>
-        <Footer />
+        {/* <Footer /> */}
       </Router>
     </HelmetProvider>
   );
