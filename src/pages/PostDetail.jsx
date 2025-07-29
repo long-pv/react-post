@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import { getPostById } from "../store/posts/postsSlice";
 import ClipLoader from "react-spinners/ClipLoader";
+import Seo from '../components/Seo';
 
 const PostDetail = () => {
   const { id } = useParams();
@@ -32,37 +33,42 @@ const PostDetail = () => {
     dataPostDetails._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
 
   return (
-    <div className="container">
-      {/* ✅ Breadcrumb */}
-      <nav className="mb-4" aria-label="breadcrumb">
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item">
-            <Link to="/">Trang chủ</Link>
-          </li>
-          <li className="breadcrumb-item">
-            <Link to="/posts">Bài viết</Link>
-          </li>
-          <li className="breadcrumb-item active" aria-current="page" dangerouslySetInnerHTML={{ __html: dataPostDetails?.title?.rendered }} />
-        </ol>
-      </nav>
+    <div>
+      {/* SEO */}
+      {dataPostDetails?.yoast_head_json && <Seo yoast={dataPostDetails.yoast_head_json} />}
 
-      {/* ✅ Title */}
-      <h1 dangerouslySetInnerHTML={{ __html: dataPostDetails?.title?.rendered }} />
+      <div className="container">
+        {/* ✅ Breadcrumb */}
+        <nav className="mb-4" aria-label="breadcrumb">
+          <ol className="breadcrumb">
+            <li className="breadcrumb-item">
+              <Link to="/">Trang chủ</Link>
+            </li>
+            <li className="breadcrumb-item">
+              <Link to="/posts">Bài viết</Link>
+            </li>
+            <li className="breadcrumb-item active" aria-current="page" dangerouslySetInnerHTML={{ __html: dataPostDetails?.title?.rendered }} />
+          </ol>
+        </nav>
 
-      {/* ✅ Image */}
-      {featuredImage && (
-        <img
-          src={featuredImage}
-          alt={dataPostDetails?.title?.rendered}
-          className="img-fluid mb-4"
+        {/* ✅ Title */}
+        <h1 dangerouslySetInnerHTML={{ __html: dataPostDetails?.title?.rendered }} />
+
+        {/* ✅ Image */}
+        {featuredImage && (
+          <img
+            src={featuredImage}
+            alt={dataPostDetails?.title?.rendered}
+            className="img-fluid mb-4"
+          />
+        )}
+
+        {/* ✅ Content */}
+        <div
+          dangerouslySetInnerHTML={{ __html: dataPostDetails?.content?.rendered }}
+          className="post-content"
         />
-      )}
-
-      {/* ✅ Content */}
-      <div
-        dangerouslySetInnerHTML={{ __html: dataPostDetails?.content?.rendered }}
-        className="post-content"
-      />
+      </div>
     </div>
   );
 };

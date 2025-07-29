@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { getLatestHomePosts } from "../store/posts/postsSlice";
 import ClipLoader from "react-spinners/ClipLoader";
+import { Helmet } from 'react-helmet-async';
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -16,6 +17,11 @@ const Home = () => {
 
   return (
     <div>
+      <Helmet>
+        <title>Trang chủ</title>
+        <meta name="description" content="Simple Blog built with React + WordPress (Headless)." />
+      </Helmet>
+
       <h2 className="mb-4">Bài viết mới nhất</h2>
 
       {loadingHome ? (

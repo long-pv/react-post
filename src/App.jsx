@@ -1,43 +1,35 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// components
 import Header from './components/Header';
 import Footer from './components/Footer';
+
+// pages
 import Home from './pages/Home';
 import PostList from './pages/PostList';
 import PostDetail from './pages/PostDetail';
 import Search from './pages/Search';
 
-// redux store
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { getOptions } from "./store/options/optionsSlice";
-import { getLatestPosts } from "./store/posts/postsSlice";
+// SEO meta
+import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
-  
-  // luôn gọi 1 lần duy nhất mỗi lần load app
-  const dispatch = useDispatch();
-  useEffect(() => {
-    const fetchInitialData = () => {
-      dispatch(getOptions());
-      dispatch(getLatestPosts());
-    };
-    fetchInitialData();
-  }, [dispatch]);
-
   // Router
   return (
-    <Router>
-      <Header />
-      <main className="container py-4">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/posts" element={<PostList />} />
-          <Route path="/posts/:id" element={<PostDetail />} />
-          <Route path="/search" element={<Search />} />
-        </Routes>
-      </main>
-      <Footer />
-    </Router>
+    <HelmetProvider>
+      <Router>
+        <Header />
+        <main className="container py-4">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/posts" element={<PostList />} />
+            <Route path="/posts/:id" element={<PostDetail />} />
+            <Route path="/search" element={<Search />} />
+          </Routes>
+        </main>
+        <Footer />
+      </Router>
+    </HelmetProvider>
   );
 }
 

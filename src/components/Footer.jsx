@@ -1,12 +1,24 @@
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getOptions } from "../store/options/optionsSlice";
+import { getLatestPosts } from "../store/posts/postsSlice";
 import { Link } from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
 
 const Footer = () => {
-  const { data : dataOptions, loading : loadingOptions } = useSelector((state) => state.options);
-  const { data : dataPosts, loading : loadingPosts } = useSelector((state) => state.posts);
+  const dispatch = useDispatch();
+  const { data: dataOptions, loading: loadingOptions } = useSelector((state) => state.options);
+  const { data: dataPosts, loading: loadingPosts } = useSelector((state) => state.posts);
   const lienHe = dataOptions?.lien_he;
   const gioi_thieu = dataOptions?.gioi_thieu;
+
+  useEffect(() => {
+    const fetchInitialData = () => {
+      dispatch(getOptions());
+      dispatch(getLatestPosts());
+    };
+    fetchInitialData();
+  }, [dispatch]);
 
   return (
     <footer className="bg-dark text-white py-4 mt-5">
@@ -20,7 +32,7 @@ const Footer = () => {
                 <ClipLoader size={32} color="#ffffff" />
               </div>
             ) : gioi_thieu ? (
-                <div>{ gioi_thieu }</div>
+              <div>{gioi_thieu}</div>
             ) : (
               <p>Không có dữ liệu.</p>
             )}
@@ -42,7 +54,7 @@ const Footer = () => {
                 ))}
               </ul>
             ) : (
-                 <p>Không có dữ liệu.</p>
+              <p>Không có dữ liệu.</p>
             )}
           </div>
 
