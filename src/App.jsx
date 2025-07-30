@@ -19,7 +19,7 @@ function App() {
     <HelmetProvider>
       <Router>
         <Header />
-        <main className="container py-4">
+        <main>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/posts" element={<PostList />} />

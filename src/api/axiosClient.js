@@ -9,12 +9,12 @@ const axiosClient = axios.create({
 });
 
 // Add interceptor để tự thêm ?ver=timestamp vào tất cả request
-// axiosClient.interceptors.request.use((config) => {
-// 	if (!config.params) {
-// 		config.params = {};
-// 	}
-// 	config.params.ver = Date.now();
-// 	return config;
-// });
+axiosClient.interceptors.request.use((config) => {
+	if (!config.params) {
+		config.params = {};
+	}
+	config.params.ver = Date.now();
+	return config;
+});
 
 export default axiosClient;
