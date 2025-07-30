@@ -1,23 +1,37 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getPostById } from "../store/posts/postsSlice";
+import axiosClient from "../api/axiosClient";
 import ClipLoader from "react-spinners/ClipLoader";
-import Seo from '../components/Seo';
+import Seo from "../components/Seo";
 
 const PostDetail = () => {
-  const { id } = useParams();
-  const dispatch = useDispatch();
-
-  const { dataPostDetails, loadingPostDetails } = useSelector((state) => state.posts);
+  const { slug } = useParams();
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      dispatch(getPostById(id));
-    }
-  }, [dispatch, id]);
+    const fetchPost = async () => {
+      try {
+        const res = await axiosClient.get(
+          `/wp-json/wp/v2/posts?slug=${slug}&_embed`
+        );
+        if (res.data.length > 0) {
+          setPost(res.data[0]);
+        } else {
+          setPost(null);
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải bài viết:", error);
+        setPost(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (loadingPostDetails) {
+    fetchPost();
+  }, [slug]);
+
+  if (loading) {
     return (
       <div className="d-flex justify-content-center my-5">
         <ClipLoader size={40} color="#000" />
@@ -25,48 +39,52 @@ const PostDetail = () => {
     );
   }
 
-  if (!dataPostDetails) {
+  if (!post) {
     return <p className="text-center mt-5">Không tìm thấy bài viết.</p>;
   }
 
   const featuredImage =
-    dataPostDetails._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+    post._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
 
   return (
     <div>
       {/* SEO */}
-      {dataPostDetails?.yoast_head_json && <Seo yoast={dataPostDetails.yoast_head_json} />}
+      {post?.yoast_head_json && <Seo yoast={post.yoast_head_json} />}
 
-      <div className="container">
-        {/* ✅ Breadcrumb */}
+      <div className="container section">
+        {/* Breadcrumb */}
         <nav className="mb-4" aria-label="breadcrumb">
           <ol className="breadcrumb">
             <li className="breadcrumb-item">
               <Link to="/">Trang chủ</Link>
             </li>
             <li className="breadcrumb-item">
-              <Link to="/posts">Bài viết</Link>
+              <Link to="/blog">Bài viết</Link>
             </li>
-            <li className="breadcrumb-item active" aria-current="page" dangerouslySetInnerHTML={{ __html: dataPostDetails?.title?.rendered }} />
+            <li
+              className="breadcrumb-item active"
+              aria-current="page"
+              dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+            />
           </ol>
         </nav>
 
-        {/* ✅ Title */}
-        <h1 dangerouslySetInnerHTML={{ __html: dataPostDetails?.title?.rendered }} />
+        {/* Title */}
+        <h1 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
 
-        {/* ✅ Image */}
+        {/* Featured Image */}
         {featuredImage && (
           <img
             src={featuredImage}
-            alt={dataPostDetails?.title?.rendered}
+            alt={post.title.rendered}
             className="img-fluid mb-4"
           />
         )}
 
-        {/* ✅ Content */}
+        {/* Content */}
         <div
-          dangerouslySetInnerHTML={{ __html: dataPostDetails?.content?.rendered }}
           className="post-content"
+          dangerouslySetInnerHTML={{ __html: post.content.rendered }}
         />
       </div>
     </div>

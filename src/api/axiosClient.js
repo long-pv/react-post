@@ -13,7 +13,7 @@ axiosClient.interceptors.request.use((config) => {
 	if (!config.params) {
 		config.params = {};
 	}
-	config.params.ver = Date.now();
+	config.params.ver = "1.0.0";
 	return config;
 });
 

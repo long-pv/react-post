@@ -12,7 +12,7 @@ const PostCard = ({ id }) => {
         const fetchPost = async () => {
             try {
                 const res = await axiosClient.get(
-                    `/wp-json/wp/v2/posts/${id}?_embed&_fields=id,title,featured_media`
+                    `/wp-json/wp/v2/posts/${id}?_embed&_fields=id,title,featured_media,slug`
                 );
                 setPost(res.data);
             } catch (err) {
@@ -30,7 +30,7 @@ const PostCard = ({ id }) => {
             <Image id={post.featured_media} className="card-img-top" />
             <div className="card-body">
                 <h5 className="card-title" dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
-                <Link to={`/posts/${post.id}`} className="btn btn-sm btn-outline-primary">
+                <Link to={`/post/${post.slug}`} className="btn btn-sm btn-outline-primary">
                     Xem chi tiết
                 </Link>
             </div>

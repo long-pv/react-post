@@ -6,7 +6,7 @@ import Footer from './components/Footer';
 
 // pages
 import Home from './pages/Home';
-import PostList from './pages/PostList';
+import Blog from './pages/Blog';
 import PostDetail from './pages/PostDetail';
 import Search from './pages/Search';
 
@@ -22,8 +22,9 @@ function App() {
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/posts" element={<PostList />} />
-            <Route path="/posts/:id" element={<PostDetail />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/category/:categorySlug" element={<Blog />} />
+            <Route path="/post/:slug" element={<PostDetail />} />
             <Route path="/search" element={<Search />} />
           </Routes>
         </main>

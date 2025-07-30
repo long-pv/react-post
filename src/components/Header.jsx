@@ -34,7 +34,7 @@ const Header = () => {
                     Trang chủ
                   </NavLink>
                   <NavLink
-                    to="/posts"
+                    to="/blog"
                     className={({ isActive }) => ` ${isActive ? 'active' : ''}`}
                   >
                     Danh sách bài viết
