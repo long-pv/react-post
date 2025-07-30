@@ -4,6 +4,7 @@ import { getOptions } from "../store/options/optionsSlice";
 import LatestPosts from "../components/LatestPosts";
 import Banner from "../components/Banner";
 import CategoryList from "../components/CategoryList";
+import ContactForm from "../components/ContactForm";
 
 const Home = () => {
   const dispatch = useDispatch();
