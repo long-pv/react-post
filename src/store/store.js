@@ -1,11 +1,21 @@
-// src/store.js
+// src/store/store.js
 import { configureStore } from "@reduxjs/toolkit";
-import optionsSlice from "./options/optionsSlice";
+import optionsReducer from "./options/optionsSlice";
 
+/**
+ * Redux store của toàn bộ ứng dụng
+ */
 const store = configureStore({
 	reducer: {
-		options: optionsSlice,
+		options: optionsReducer,
 	},
+
+	/**
+	 * Redux Toolkit đã bao gồm sẵn:
+	 * - redux-thunk
+	 * - devtools (ở môi trường dev)
+	 */
+	middleware: (getDefaultMiddleware) => getDefaultMiddleware(),
 });
 
 export default store;

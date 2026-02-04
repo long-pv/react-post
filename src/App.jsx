@@ -1,37 +1,29 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
 
-// components
-import Header from './components/Header';
-import Footer from './components/Footer';
+// Pages
+import HomePage from './pages/HomePage';
+import BlogPage from './pages/BlogPage';
+import BlogDetailPage from './pages/BlogDetailPage';
+// import CoursesPage from './pages/CoursesPage';
+// import JobsPage from './pages/JobsPage';
+// import ProfilePage from './pages/ProfilePage';
 
-// pages
-import Home from './pages/Home';
-import Blog from './pages/Blog';
-import PostDetail from './pages/PostDetail';
-import Search from './pages/Search';
-
-// SEO meta
-import { HelmetProvider } from 'react-helmet-async';
-
-function App() {
-  // Router
+const App = () => {
   return (
-    <HelmetProvider>
-      <Router>
-        <Header />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/category/:categorySlug" element={<Blog />} />
-            <Route path="/post/:slug" element={<PostDetail />} />
-            <Route path="/search" element={<Search />} />
-          </Routes>
-        </main>
-        {/* <Footer /> */}
-      </Router>
-    </HelmetProvider>
+    <BrowserRouter>
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogDetailPage />} />
+          {/* <Route path="/courses" element={<CoursesPage />} /> */}
+          {/* <Route path="/jobs" element={<JobsPage />} /> */}
+          {/* <Route path="/profile" element={<ProfilePage />} /> */}
+        </Routes>
+      </MainLayout>
+    </BrowserRouter>
   );
-}
+};
 
 export default App;

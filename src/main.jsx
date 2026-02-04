@@ -1,24 +1,30 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+
 // Redux
 import { Provider } from 'react-redux';
-import store from "./store/store"; // Đường dẫn này đúng nếu store.js nằm trong src/
+import store from './store/store';
 
-// CSS Imports
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-import 'react-toastify/dist/ReactToastify.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import './styles/app.scss';
+// MUI
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import theme from './theme';
 
 // App
-import App from './App.jsx';
+import App from './App';
 
-createRoot(document.getElementById('root')).render(
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('Root element #root not found');
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
     </Provider>
-  </StrictMode>,
+  </StrictMode>
 );
