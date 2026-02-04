@@ -1,7 +1,7 @@
-// src/pages/BlogPage/BlogList.jsx
 import { useState } from 'react';
-import { Grid, Pagination, Stack } from '@mui/material';
+import { Grid, Box } from '@mui/material';
 import BlogItem from './BlogItem';
+import Pagination from '../../components/Common/Pagination';
 import { blogFakeData } from '../../data/blogFakeData';
 
 const POSTS_PER_PAGE = 8;
@@ -18,7 +18,8 @@ const BlogList = () => {
     );
 
     return (
-        <Stack spacing={4}>
+        <Box>
+            {/* LIST */}
             <Grid container spacing={3}>
                 {currentPosts.map((post) => (
                     <Grid item xs={12} sm={6} md={4} key={post.id}>
@@ -27,15 +28,15 @@ const BlogList = () => {
                 ))}
             </Grid>
 
-            <Stack alignItems="center">
+            {/* PAGINATION – dùng chung */}
+            <Box sx={{ mt: 3 }}>
                 <Pagination
-                    count={totalPages}
                     page={page}
-                    onChange={(_, value) => setPage(value)}
-                    color="primary"
+                    totalPages={totalPages}
+                    onChange={setPage}
                 />
-            </Stack>
-        </Stack>
+            </Box>
+        </Box>
     );
 };
 

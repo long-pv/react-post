@@ -5,7 +5,7 @@ import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import BlogPage from './pages/BlogPage';
 import BlogDetailPage from './pages/BlogDetailPage';
-// import CoursesPage from './pages/CoursesPage';
+import CoursesPage from './pages/CoursesPage';
 // import JobsPage from './pages/JobsPage';
 // import ProfilePage from './pages/ProfilePage';
 
@@ -17,7 +17,7 @@ const App = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/blog/:slug" element={<BlogDetailPage />} />
-          {/* <Route path="/courses" element={<CoursesPage />} /> */}
+          <Route path="/courses" element={<CoursesPage />} />
           {/* <Route path="/jobs" element={<JobsPage />} /> */}
           {/* <Route path="/profile" element={<ProfilePage />} /> */}
         </Routes>
