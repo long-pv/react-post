@@ -18,7 +18,6 @@ const menuItems = [
     { label: 'Blog', path: '/blog' },
     { label: 'Khóa học', path: '/courses' },
     { label: 'Việc làm', path: '/jobs' },
-    { label: 'Profile', path: '/profile' },
 ];
 
 const Header = () => {

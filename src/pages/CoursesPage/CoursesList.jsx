@@ -1,7 +1,6 @@
 // src/pages/CoursesPage/CoursesList.jsx
 import { useState } from 'react';
-import { Box } from '@mui/material';
-import Grid from '@mui/material/Grid';
+import { Box, Grid } from '@mui/material';
 import CourseItem from './CourseItem';
 import CourseRegisterDialog from './CourseRegisterDialog';
 import Pagination from '../../components/Common/Pagination';
@@ -27,8 +26,11 @@ const CoursesList = () => {
         <Box>
             {/* LIST */}
             <Grid container spacing={3}>
-                {currentCourses.map((course) => (
-                    <Grid xs={12} sm={6} md={4} key={course.id}>
+                {currentCourses.map(course => (
+                    <Grid
+                        key={course.id}
+                        size={{ xs: 12, sm: 6, md: 4 }}
+                    >
                         <CourseItem
                             course={course}
                             onRegister={setSelectedCourse}

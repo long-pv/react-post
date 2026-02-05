@@ -1,44 +1,43 @@
-import { Box, Typography, Grid, Card, CardContent, Chip, Stack } from '@mui/material';
-
-const mockCourses = [
-    {
-        id: 1,
-        title: 'WordPress cho Developer',
-        desc: 'Custom theme, plugin, REST API.',
-    },
-    {
-        id: 2,
-        title: 'Headless WordPress + React',
-        desc: 'Xây dựng frontend bằng React + WP backend.',
-    },
-];
+// src/pages/HomePage/CoursesSection.jsx
+import { useState } from 'react';
+import { Box, Grid, Typography } from '@mui/material';
+import CourseItem from '../CoursesPage/CourseItem';
+import CourseRegisterDialog from '../CoursesPage/CourseRegisterDialog';
+import { coursesFakeData } from '../../data/coursesFakeData';
 
 const CoursesSection = () => {
+    const [selectedCourse, setSelectedCourse] = useState(null);
+
+    // Lấy 3 khóa học mới nhất
+    const latestCourses = coursesFakeData.slice(0, 3);
+
     return (
         <Box>
             <Typography variant="h4" fontWeight={600} mb={3}>
                 Khóa học nổi bật
             </Typography>
 
+            {/* LIST – giống hệt CoursesList */}
             <Grid container spacing={3}>
-                {mockCourses.map((course) => (
-                    <Grid item xs={12} md={6} key={course.id}>
-                        <Card>
-                            <CardContent>
-                                <Stack spacing={1}>
-                                    <Chip label="WordPress" size="small" sx={{ width: 'fit-content' }} />
-                                    <Typography fontWeight={600}>
-                                        {course.title}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {course.desc}
-                                    </Typography>
-                                </Stack>
-                            </CardContent>
-                        </Card>
+                {latestCourses.map(course => (
+                    <Grid
+                        key={course.id}
+                        size={{ xs: 12, sm: 6, md: 4 }}
+                    >
+                        <CourseItem
+                            course={course}
+                            onRegister={setSelectedCourse}
+                        />
                     </Grid>
                 ))}
             </Grid>
+
+            {/* REGISTER DIALOG – dùng lại */}
+            <CourseRegisterDialog
+                open={Boolean(selectedCourse)}
+                course={selectedCourse}
+                onClose={() => setSelectedCourse(null)}
+            />
         </Box>
     );
 };

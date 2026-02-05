@@ -12,9 +12,12 @@ const BlogSection = () => {
                 Bài viết mới nhất
             </Typography>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
                 {latestPosts.map((post) => (
-                    <Grid item xs={12} sm={6} md={4} key={post.id}>
+                    <Grid
+                        key={post.id}
+                        size={{ xs: 12, sm: 6, md: 3 }}
+                    >
                         <BlogItem post={post} />
                     </Grid>
                 ))}

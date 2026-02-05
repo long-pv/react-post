@@ -22,7 +22,10 @@ const BlogList = () => {
             {/* LIST */}
             <Grid container spacing={3}>
                 {currentPosts.map((post) => (
-                    <Grid item xs={12} sm={6} md={4} key={post.id}>
+                    <Grid
+                        key={post.id}
+                        size={{ xs: 12, sm: 6, md: 4 }}
+                    >
                         <BlogItem post={post} />
                     </Grid>
                 ))}

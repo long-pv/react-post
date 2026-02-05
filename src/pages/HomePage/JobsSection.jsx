@@ -1,42 +1,38 @@
-import { Box, Typography, Stack, Paper } from '@mui/material';
-
-const mockJobs = [
-    {
-        id: 1,
-        title: 'WordPress Developer (Remote)',
-        salary: '15 – 25 triệu',
-    },
-    {
-        id: 2,
-        title: 'Senior WP Developer',
-        salary: 'Up to 40 triệu',
-    },
-    {
-        id: 3,
-        title: 'Freelance WordPress',
-        salary: 'Theo dự án',
-    },
-];
+import { useState } from 'react';
+import { Box, Typography, Grid } from '@mui/material';
+import JobItem from '../JobsPage/JobItem';
+import JobApplyDialog from '../JobsPage/JobApplyDialog';
+import { jobsFakeData } from '../../data/jobsFakeData';
 
 const JobsSection = () => {
+    const [selectedJob, setSelectedJob] = useState(null);
+    const latestJobs = jobsFakeData.slice(0, 3);
+
     return (
         <Box>
             <Typography variant="h4" fontWeight={600} mb={3}>
                 Việc làm WordPress
             </Typography>
 
-            <Stack spacing={2}>
-                {mockJobs.map((job) => (
-                    <Paper key={job.id} sx={{ p: 2 }}>
-                        <Typography fontWeight={600}>
-                            {job.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Lương: {job.salary}
-                        </Typography>
-                    </Paper>
+            <Grid container spacing={3}>
+                {latestJobs.map((job) => (
+                    <Grid
+                        key={job.id}
+                        size={{ xs: 12, sm: 6, md: 4 }}
+                    >
+                        <JobItem
+                            job={job}
+                            onApply={setSelectedJob}
+                        />
+                    </Grid>
                 ))}
-            </Stack>
+            </Grid>
+
+            <JobApplyDialog
+                open={Boolean(selectedJob)}
+                job={selectedJob}
+                onClose={() => setSelectedJob(null)}
+            />
         </Box>
     );
 };
