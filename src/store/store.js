@@ -1,21 +1,22 @@
-// src/store/store.js
 import { configureStore } from "@reduxjs/toolkit";
-import optionsReducer from "./options/optionsSlice";
+import postReducer from "./postSlice";
 
 /**
- * Redux store của toàn bộ ứng dụng
+ * Tạo Redux Store
+ * Store là nơi lưu TOÀN BỘ state của app
  */
 const store = configureStore({
 	reducer: {
-		options: optionsReducer,
+		/**
+		 * posts là tên state
+		 * → dùng trong useSelector: state.posts
+		 */
+		posts: postReducer,
 	},
-
-	/**
-	 * Redux Toolkit đã bao gồm sẵn:
-	 * - redux-thunk
-	 * - devtools (ở môi trường dev)
-	 */
-	middleware: (getDefaultMiddleware) => getDefaultMiddleware(),
 });
 
+/**
+ * Export default
+ * → để file khác import đơn giản hơn
+ */
 export default store;

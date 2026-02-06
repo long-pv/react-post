@@ -15,16 +15,16 @@ import App from './App';
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
-  throw new Error('Root element #root not found');
+    throw new Error('Root element #root not found');
 }
 
 createRoot(rootElement).render(
-  <StrictMode>
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>
-    </Provider>
-  </StrictMode>
+    <StrictMode>
+        <Provider store={store}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <App />
+            </ThemeProvider>
+        </Provider>
+    </StrictMode>
 );

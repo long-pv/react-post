@@ -6,9 +6,14 @@ import {
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 
+/**
+ * Component hiển thị 1 bài viết
+ * Nhận data đã được chuẩn hoá từ Redux Store
+ */
 const BlogItem = ({ post }) => {
     return (
         <Card sx={{ height: '100%' }}>
+            {/* Ảnh đại diện bài viết */}
             <CardMedia
                 component="img"
                 height="180"
@@ -17,6 +22,7 @@ const BlogItem = ({ post }) => {
             />
 
             <CardContent>
+                {/* Tiêu đề bài viết */}
                 <Typography
                     variant="h6"
                     component={Link}
