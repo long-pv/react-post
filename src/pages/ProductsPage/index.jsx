@@ -232,7 +232,7 @@ const ProductsPage = () => {
 
     const handleCheckout = async () => {
         setCheckoutMessage('');
-        const resultAction = await dispatch(syncCart());
+        const resultAction = await dispatch(syncCart({ forceCreate: true }));
 
         if (syncCart.fulfilled.match(resultAction)) {
             dispatch(clearCart());

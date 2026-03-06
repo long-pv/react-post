@@ -55,10 +55,11 @@ export const fetchMyCarts = createAsyncThunk('cart/fetchMyCarts', async (userId,
     }
 });
 
-export const syncCart = createAsyncThunk('cart/syncCart', async (_, thunkAPI) => {
+export const syncCart = createAsyncThunk('cart/syncCart', async (options, thunkAPI) => {
     const state = thunkAPI.getState();
     const token = state.auth.token;
     const items = state.cart.items;
+    const forceCreate = Boolean(options?.forceCreate);
 
     const storedUserRaw = localStorage.getItem(USER_KEY);
     const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null;
@@ -82,7 +83,7 @@ export const syncCart = createAsyncThunk('cart/syncCart', async (_, thunkAPI) =>
             products: normalizeProducts(items),
         };
 
-        if (existingCarts.length > 0 && existingCarts[0].id) {
+        if (!forceCreate && existingCarts.length > 0 && existingCarts[0].id) {
             return await updateCartRequest(existingCarts[0].id, payload);
         }
 
