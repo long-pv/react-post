@@ -14,13 +14,24 @@ const initialState = {
 
 const normalizeAuthData = (responseData) => {
     const token =
-        responseData?.accessToken ||
         responseData?.token ||
-        responseData?.data?.accessToken ||
+        responseData?.accessToken ||
         responseData?.data?.token ||
+        responseData?.data?.accessToken ||
         null;
 
-    const user = responseData?.user || responseData?.data?.user || null;
+    const userFromResponse = responseData?.user || responseData?.data?.user;
+
+    const user =
+        userFromResponse ||
+        (responseData?.id || responseData?.username
+            ? {
+                  id: responseData.id,
+                  username: responseData.username,
+                  email: responseData.email,
+                  name: responseData.name || responseData.firstName,
+              }
+            : null);
 
     return { token, user };
 };
@@ -87,12 +98,12 @@ const authSlice = createSlice({
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.token = action.payload.token;
-                state.user = action.payload.user;
                 if (action.payload.token) {
+                    state.token = action.payload.token;
                     localStorage.setItem(ACCESS_TOKEN_KEY, action.payload.token);
                 }
                 if (action.payload.user) {
+                    state.user = action.payload.user;
                     localStorage.setItem(USER_KEY, JSON.stringify(action.payload.user));
                 }
             })
@@ -111,9 +122,8 @@ const authSlice = createSlice({
                 localStorage.removeItem(ACCESS_TOKEN_KEY);
                 localStorage.removeItem(USER_KEY);
             })
-            .addCase(logout.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.payload;
+            .addCase(logout.rejected, (state) => {
+                state.status = 'idle';
                 state.token = null;
                 state.user = null;
                 localStorage.removeItem(ACCESS_TOKEN_KEY);

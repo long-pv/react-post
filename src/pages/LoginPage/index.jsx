@@ -10,7 +10,7 @@ const LoginPage = () => {
     const { status, error } = useSelector((state) => state.auth);
 
     const [formData, setFormData] = useState({
-        email: '',
+        username: '',
         password: '',
     });
     const [formError, setFormError] = useState('');
@@ -24,8 +24,8 @@ const LoginPage = () => {
         event.preventDefault();
         setFormError('');
 
-        if (!formData.email || !formData.password) {
-            setFormError('Vui lòng nhập đầy đủ email và mật khẩu');
+        if (!formData.username || !formData.password) {
+            setFormError('Vui lòng nhập username và mật khẩu');
             return;
         }
 
@@ -43,7 +43,7 @@ const LoginPage = () => {
                     Đăng nhập
                 </Typography>
                 <Typography variant="body2" color="text.secondary" mb={3}>
-                    Đăng nhập để sử dụng dữ liệu từ API.
+                    API: POST /api/auth/login (username + password)
                 </Typography>
 
                 <Box component="form" onSubmit={handleSubmit}>
@@ -51,10 +51,9 @@ const LoginPage = () => {
                         {(formError || error) && <Alert severity="error">{formError || error}</Alert>}
 
                         <TextField
-                            name="email"
-                            type="email"
-                            label="Email"
-                            value={formData.email}
+                            name="username"
+                            label="Username"
+                            value={formData.username}
                             onChange={handleChange}
                             fullWidth
                             required
@@ -75,7 +74,7 @@ const LoginPage = () => {
                         </Button>
 
                         <Typography variant="body2">
-                            Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+                            Chưa có tài khoản? <Link to="/register">Tạo user</Link>
                         </Typography>
                     </Stack>
                 </Box>

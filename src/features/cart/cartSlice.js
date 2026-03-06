@@ -1,4 +1,10 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {
+    createCartRequest,
+    fetchAllCartsRequest,
+    fetchCartsByUserRequest,
+    updateCartRequest,
+} from './cartApi';
 
 const CART_STORAGE_KEY = 'shopping_cart';
 
@@ -15,10 +21,65 @@ const persistCart = (items) => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
 };
 
+const normalizeProducts = (items = []) =>
+    items.map((item) => ({
+        productId: Number(item.productId || item.id),
+        quantity: Number(item.quantity || 1),
+    }));
+
+export const fetchAllCarts = createAsyncThunk('cart/fetchAllCarts', async (_, thunkAPI) => {
+    try {
+        return await fetchAllCartsRequest();
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Không lấy được carts');
+    }
+});
+
+export const fetchMyCarts = createAsyncThunk('cart/fetchMyCarts', async (userId, thunkAPI) => {
+    try {
+        return await fetchCartsByUserRequest(userId);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Không lấy được cart của user');
+    }
+});
+
+export const syncCart = createAsyncThunk('cart/syncCart', async (_, thunkAPI) => {
+    const state = thunkAPI.getState();
+    const userId = state.auth.user?.id;
+    const token = state.auth.token;
+    const items = state.cart.items;
+
+    if (!userId || !token) {
+        return thunkAPI.rejectWithValue('Cần đăng nhập để đồng bộ cart lên server');
+    }
+
+    try {
+        const existingCarts = await fetchCartsByUserRequest(userId);
+        const payload = {
+            userId,
+            date: new Date().toISOString(),
+            products: normalizeProducts(items),
+        };
+
+        if (existingCarts.length > 0 && existingCarts[0].id) {
+            return await updateCartRequest(existingCarts[0].id, payload);
+        }
+
+        return await createCartRequest(payload);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Sync cart thất bại');
+    }
+});
+
 const cartSlice = createSlice({
     name: 'cart',
     initialState: {
         items: loadInitialCart(),
+        serverCarts: [],
+        status: 'idle',
+        error: null,
+        syncStatus: 'idle',
+        syncMessage: null,
     },
     reducers: {
         addToCart(state, action) {
@@ -54,9 +115,54 @@ const cartSlice = createSlice({
             state.items = [];
             persistCart(state.items);
         },
+        clearSyncMessage(state) {
+            state.syncMessage = null;
+            state.error = null;
+        },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchAllCarts.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(fetchAllCarts.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.serverCarts = action.payload;
+            })
+            .addCase(fetchAllCarts.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
+            })
+            .addCase(fetchMyCarts.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(fetchMyCarts.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.serverCarts = action.payload;
+            })
+            .addCase(fetchMyCarts.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
+            })
+            .addCase(syncCart.pending, (state) => {
+                state.syncStatus = 'loading';
+                state.syncMessage = null;
+                state.error = null;
+            })
+            .addCase(syncCart.fulfilled, (state, action) => {
+                state.syncStatus = 'succeeded';
+                state.syncMessage = 'Đồng bộ giỏ hàng thành công';
+                state.serverCarts = [action.payload, ...state.serverCarts.filter((cart) => cart.id !== action.payload?.id)];
+            })
+            .addCase(syncCart.rejected, (state, action) => {
+                state.syncStatus = 'failed';
+                state.error = action.payload;
+            });
     },
 });
 
-export const { addToCart, removeFromCart, updateCartQuantity, clearCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, updateCartQuantity, clearCart, clearSyncMessage } = cartSlice.actions;
 
 export default cartSlice.reducer;
