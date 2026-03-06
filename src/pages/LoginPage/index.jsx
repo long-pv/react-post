@@ -1,43 +1,35 @@
-import { useState } from 'react';
 import { Alert, Box, Button, Container, Paper, Stack, TextField, Typography } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
 import { login } from '../../features/auth/authSlice';
-import { validateEmail, validatePassword } from '../../utils/validation';
+import { createYupResolver } from '../../utils/yupResolver';
+
+const loginSchema = yup.object({
+    email: yup.string().trim().required('Vui lòng nhập email').email('Email không hợp lệ'),
+    password: yup.string().required('Vui lòng nhập mật khẩu').min(6, 'Mật khẩu tối thiểu 6 ký tự'),
+});
 
 const LoginPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { status, error } = useSelector((state) => state.auth);
 
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm({
+        defaultValues: {
+            email: '',
+            password: '',
+        },
+        resolver: createYupResolver(loginSchema),
     });
-    const [formError, setFormError] = useState('');
 
-    const handleChange = (event) => {
-        setFormData((prev) => ({
-            ...prev,
-            [event.target.name]: event.target.value,
-        }));
-    };
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        setFormError('');
-
-        if (!validateEmail(formData.email)) {
-            setFormError('Email không hợp lệ');
-            return;
-        }
-
-        if (!validatePassword(formData.password)) {
-            setFormError('Mật khẩu tối thiểu 6 ký tự');
-            return;
-        }
-
-        const resultAction = await dispatch(login(formData));
+    const onSubmit = async (values) => {
+        const resultAction = await dispatch(login(values));
 
         if (login.fulfilled.match(resultAction)) {
             navigate('/');
@@ -54,27 +46,40 @@ const LoginPage = () => {
                     Đăng nhập để quản lý tài khoản của bạn.
                 </Typography>
 
-                <Box component="form" onSubmit={handleSubmit}>
+                <Box component="form" onSubmit={handleSubmit(onSubmit)}>
                     <Stack spacing={2}>
-                        {(formError || error) && <Alert severity="error">{formError || error}</Alert>}
+                        {error && <Alert severity="error">{error}</Alert>}
 
-                        <TextField
+                        <Controller
                             name="email"
-                            type="email"
-                            label="Email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            fullWidth
-                            required
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    type="email"
+                                    label="Email"
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.email)}
+                                    helperText={errors.email?.message}
+                                />
+                            )}
                         />
-                        <TextField
+
+                        <Controller
                             name="password"
-                            type="password"
-                            label="Mật khẩu"
-                            value={formData.password}
-                            onChange={handleChange}
-                            fullWidth
-                            required
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    type="password"
+                                    label="Mật khẩu"
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.password)}
+                                    helperText={errors.password?.message}
+                                />
+                            )}
                         />
 
                         <Button type="submit" variant="contained" disabled={status === 'loading'}>

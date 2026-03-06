@@ -1,58 +1,49 @@
-import { useState } from 'react';
 import { Alert, Box, Button, Container, Paper, Stack, TextField, Typography } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
 import { register } from '../../features/auth/authSlice';
-import { validateEmail, validatePassword } from '../../utils/validation';
+import { createYupResolver } from '../../utils/yupResolver';
+
+const registerSchema = yup.object({
+    name: yup
+        .string()
+        .trim()
+        .required('Vui lòng nhập họ và tên')
+        .min(2, 'Tên phải có ít nhất 2 ký tự'),
+    email: yup.string().trim().required('Vui lòng nhập email').email('Email không hợp lệ'),
+    password: yup.string().required('Vui lòng nhập mật khẩu').min(6, 'Mật khẩu tối thiểu 6 ký tự'),
+    confirmPassword: yup
+        .string()
+        .required('Vui lòng xác nhận mật khẩu')
+        .oneOf([yup.ref('password')], 'Xác nhận mật khẩu chưa khớp'),
+});
 
 const RegisterPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { status, error } = useSelector((state) => state.auth);
 
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm({
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        },
+        resolver: createYupResolver(registerSchema),
     });
-    const [formError, setFormError] = useState('');
 
-    const handleChange = (event) => {
-        setFormData((prev) => ({
-            ...prev,
-            [event.target.name]: event.target.value,
-        }));
-    };
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        setFormError('');
-
-        if (formData.name.trim().length < 2) {
-            setFormError('Tên phải có ít nhất 2 ký tự');
-            return;
-        }
-
-        if (!validateEmail(formData.email)) {
-            setFormError('Email không hợp lệ');
-            return;
-        }
-
-        if (!validatePassword(formData.password)) {
-            setFormError('Mật khẩu tối thiểu 6 ký tự');
-            return;
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-            setFormError('Xác nhận mật khẩu chưa khớp');
-            return;
-        }
-
+    const onSubmit = async (values) => {
         const payload = {
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
+            name: values.name,
+            email: values.email,
+            password: values.password,
         };
 
         const resultAction = await dispatch(register(payload));
@@ -72,44 +63,71 @@ const RegisterPage = () => {
                     Tạo tài khoản để bắt đầu sử dụng ứng dụng.
                 </Typography>
 
-                <Box component="form" onSubmit={handleSubmit}>
+                <Box component="form" onSubmit={handleSubmit(onSubmit)}>
                     <Stack spacing={2}>
-                        {(formError || error) && <Alert severity="error">{formError || error}</Alert>}
+                        {error && <Alert severity="error">{error}</Alert>}
 
-                        <TextField
+                        <Controller
                             name="name"
-                            label="Họ và tên"
-                            value={formData.name}
-                            onChange={handleChange}
-                            fullWidth
-                            required
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    label="Họ và tên"
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.name)}
+                                    helperText={errors.name?.message}
+                                />
+                            )}
                         />
-                        <TextField
+
+                        <Controller
                             name="email"
-                            type="email"
-                            label="Email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            fullWidth
-                            required
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    type="email"
+                                    label="Email"
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.email)}
+                                    helperText={errors.email?.message}
+                                />
+                            )}
                         />
-                        <TextField
+
+                        <Controller
                             name="password"
-                            type="password"
-                            label="Mật khẩu"
-                            value={formData.password}
-                            onChange={handleChange}
-                            fullWidth
-                            required
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    type="password"
+                                    label="Mật khẩu"
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.password)}
+                                    helperText={errors.password?.message}
+                                />
+                            )}
                         />
-                        <TextField
+
+                        <Controller
                             name="confirmPassword"
-                            type="password"
-                            label="Xác nhận mật khẩu"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            fullWidth
-                            required
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    type="password"
+                                    label="Xác nhận mật khẩu"
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.confirmPassword)}
+                                    helperText={errors.confirmPassword?.message}
+                                />
+                            )}
                         />
 
                         <Button type="submit" variant="contained" disabled={status === 'loading'}>
