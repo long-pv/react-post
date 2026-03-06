@@ -1,11 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Badge, Button, CircularProgress, Container, Grid, Stack, Typography } from '@mui/material';
+import {
+    Alert,
+    Badge,
+    Button,
+    CircularProgress,
+    Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Grid,
+    Stack,
+    TextField,
+    Typography,
+} from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CloudSyncIcon from '@mui/icons-material/CloudSync';
+import AddIcon from '@mui/icons-material/Add';
 import { useDispatch, useSelector } from 'react-redux';
 import ProductCard from '../../components/Products/ProductCard';
 import CartDrawer from '../../components/Cart/CartDrawer';
-import { fetchProducts } from '../../features/products/productsSlice';
+import {
+    createProduct,
+    deleteProduct,
+    fetchProducts,
+    updateProduct,
+} from '../../features/products/productsSlice';
 import {
     addToCart,
     clearCart,
@@ -16,13 +36,39 @@ import {
     updateCartQuantity,
 } from '../../features/cart/cartSlice';
 
+const initialFormValues = {
+    title: '',
+    price: '',
+    description: '',
+    image: '',
+    category: '',
+};
+
 const ProductsPage = () => {
     const dispatch = useDispatch();
     const [cartOpen, setCartOpen] = useState(false);
+    const [productDialogOpen, setProductDialogOpen] = useState(false);
+    const [editingProductId, setEditingProductId] = useState(null);
+    const [productForm, setProductForm] = useState(initialFormValues);
+    const [productFormError, setProductFormError] = useState('');
 
-    const { items: products, status, error } = useSelector((state) => state.products);
-    const { items: cartItems, syncStatus, syncMessage, serverCarts, error: cartError } = useSelector((state) => state.cart);
+    const {
+        items: products,
+        status,
+        error,
+        mutationStatus,
+        mutationError,
+    } = useSelector((state) => state.products);
+    const {
+        items: cartItems,
+        syncStatus,
+        syncMessage,
+        serverCarts,
+        error: cartError,
+    } = useSelector((state) => state.cart);
     const { user, token } = useSelector((state) => state.auth);
+
+    const isAuthenticated = Boolean(token);
 
     useEffect(() => {
         dispatch(fetchProducts());
@@ -36,6 +82,69 @@ const ProductsPage = () => {
 
     const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
 
+    const openAddDialog = () => {
+        setEditingProductId(null);
+        setProductForm(initialFormValues);
+        setProductFormError('');
+        setProductDialogOpen(true);
+    };
+
+    const openEditDialog = (product) => {
+        setEditingProductId(product.id);
+        setProductForm({
+            title: product.title || product.name || '',
+            price: String(product.price || product.cost || ''),
+            description: product.description || '',
+            image: product.image || product.thumbnail || '',
+            category: product.category || '',
+        });
+        setProductFormError('');
+        setProductDialogOpen(true);
+    };
+
+    const closeDialog = () => {
+        setProductDialogOpen(false);
+    };
+
+    const handleProductFormChange = (event) => {
+        const { name, value } = event.target;
+        setProductForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmitProduct = async (event) => {
+        event.preventDefault();
+        setProductFormError('');
+
+        if (!productForm.title || !productForm.price) {
+            setProductFormError('Vui lòng nhập title và price');
+            return;
+        }
+
+        const payload = {
+            title: productForm.title,
+            price: Number(productForm.price),
+            description: productForm.description,
+            image: productForm.image,
+            category: productForm.category,
+        };
+
+        const resultAction = editingProductId
+            ? await dispatch(updateProduct({ productId: editingProductId, payload }))
+            : await dispatch(createProduct(payload));
+
+        if (createProduct.fulfilled.match(resultAction) || updateProduct.fulfilled.match(resultAction)) {
+            setProductDialogOpen(false);
+            setEditingProductId(null);
+            setProductForm(initialFormValues);
+            dispatch(fetchProducts());
+        }
+    };
+
+    const handleDeleteProduct = async (productId) => {
+        await dispatch(deleteProduct(productId));
+        dispatch(fetchProducts());
+    };
+
     return (
         <Container maxWidth="lg" sx={{ py: 6 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={1}>
@@ -47,6 +156,11 @@ const ProductsPage = () => {
                 </div>
 
                 <Stack direction="row" spacing={1}>
+                    {isAuthenticated && (
+                        <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
+                            Thêm sản phẩm
+                        </Button>
+                    )}
                     <Button
                         variant="outlined"
                         startIcon={<CloudSyncIcon />}
@@ -81,6 +195,8 @@ const ProductsPage = () => {
                 </Alert>
             )}
 
+            {mutationError && <Alert severity="error" sx={{ mb: 2 }}>{mutationError}</Alert>}
+
             <Alert severity="info" sx={{ mb: 2 }}>
                 Server carts hiện có: {serverCarts.length} (endpoint: /ecommerce/api/carts)
             </Alert>
@@ -100,7 +216,13 @@ const ProductsPage = () => {
             <Grid container spacing={2}>
                 {products.map((product) => (
                     <Grid item xs={12} sm={6} md={4} key={product.id || `${product.title}-${product.name}`}>
-                        <ProductCard product={product} onAddToCart={(item) => dispatch(addToCart(item))} />
+                        <ProductCard
+                            product={product}
+                            onAddToCart={(item) => dispatch(addToCart(item))}
+                            canManage={isAuthenticated}
+                            onEdit={openEditDialog}
+                            onDelete={handleDeleteProduct}
+                        />
                     </Grid>
                 ))}
             </Grid>
@@ -113,6 +235,28 @@ const ProductsPage = () => {
                 onUpdateQuantity={(id, quantity) => dispatch(updateCartQuantity({ id, quantity }))}
                 onClear={() => dispatch(clearCart())}
             />
+
+            <Dialog open={productDialogOpen} onClose={closeDialog} maxWidth="sm" fullWidth>
+                <DialogTitle>{editingProductId ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm'}</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1} component="form" onSubmit={handleSubmitProduct}>
+                        {productFormError && <Alert severity="error">{productFormError}</Alert>}
+
+                        <TextField name="title" label="Title" value={productForm.title} onChange={handleProductFormChange} required fullWidth />
+                        <TextField name="price" label="Price" type="number" value={productForm.price} onChange={handleProductFormChange} required fullWidth />
+                        <TextField name="description" label="Description" value={productForm.description} onChange={handleProductFormChange} multiline rows={3} fullWidth />
+                        <TextField name="image" label="Image URL" value={productForm.image} onChange={handleProductFormChange} fullWidth />
+                        <TextField name="category" label="Category" value={productForm.category} onChange={handleProductFormChange} fullWidth />
+
+                        <DialogActions sx={{ px: 0 }}>
+                            <Button onClick={closeDialog}>Hủy</Button>
+                            <Button type="submit" variant="contained" disabled={mutationStatus === 'loading'}>
+                                {mutationStatus === 'loading' ? 'Đang lưu...' : 'Lưu'}
+                            </Button>
+                        </DialogActions>
+                    </Stack>
+                </DialogContent>
+            </Dialog>
         </Container>
     );
 };

@@ -1,7 +1,7 @@
 import { Button, Card, CardActions, CardContent, CardMedia, Stack, Typography } from '@mui/material';
 import { formatCurrency } from '../../utils/formatCurrency';
 
-const ProductCard = ({ product, onAddToCart }) => {
+const ProductCard = ({ product, onAddToCart, canManage = false, onEdit, onDelete }) => {
     const title = product.title || product.name || `Product #${product.id}`;
     const description = product.description || 'Không có mô tả';
     const image = product.image || product.thumbnail || 'https://via.placeholder.com/640x360?text=No+Image';
@@ -21,10 +21,21 @@ const ProductCard = ({ product, onAddToCart }) => {
                     </Typography>
                 </Stack>
             </CardContent>
-            <CardActions>
+            <CardActions sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'stretch' }}>
                 <Button variant="contained" fullWidth onClick={() => onAddToCart(product)}>
                     Thêm vào giỏ
                 </Button>
+
+                {canManage && (
+                    <Stack direction="row" spacing={1} width="100%">
+                        <Button variant="outlined" fullWidth onClick={() => onEdit(product)}>
+                            Chỉnh sửa
+                        </Button>
+                        <Button color="error" variant="outlined" fullWidth onClick={() => onDelete(product.id)}>
+                            Xóa
+                        </Button>
+                    </Stack>
+                )}
             </CardActions>
         </Card>
     );
