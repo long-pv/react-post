@@ -1,35 +1,35 @@
+import { useState } from 'react';
 import { Alert, Box, Button, Container, Paper, Stack, TextField, Typography } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Controller, useForm } from 'react-hook-form';
-import * as yup from 'yup';
 import { login } from '../../features/auth/authSlice';
-import { createYupResolver } from '../../utils/yupResolver';
-
-const loginSchema = yup.object({
-    email: yup.string().trim().required('Vui lòng nhập email').email('Email không hợp lệ'),
-    password: yup.string().required('Vui lòng nhập mật khẩu').min(6, 'Mật khẩu tối thiểu 6 ký tự'),
-});
 
 const LoginPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { status, error } = useSelector((state) => state.auth);
 
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm({
-        defaultValues: {
-            email: '',
-            password: '',
-        },
-        resolver: createYupResolver(loginSchema),
+    const [formData, setFormData] = useState({
+        email: '',
+        password: '',
     });
+    const [formError, setFormError] = useState('');
 
-    const onSubmit = async (values) => {
-        const resultAction = await dispatch(login(values));
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setFormError('');
+
+        if (!formData.email || !formData.password) {
+            setFormError('Vui lòng nhập đầy đủ email và mật khẩu');
+            return;
+        }
+
+        const resultAction = await dispatch(login(formData));
 
         if (login.fulfilled.match(resultAction)) {
             navigate('/');
@@ -43,43 +43,31 @@ const LoginPage = () => {
                     Đăng nhập
                 </Typography>
                 <Typography variant="body2" color="text.secondary" mb={3}>
-                    Đăng nhập để quản lý tài khoản của bạn.
+                    Đăng nhập để sử dụng dữ liệu từ API.
                 </Typography>
 
-                <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+                <Box component="form" onSubmit={handleSubmit}>
                     <Stack spacing={2}>
-                        {error && <Alert severity="error">{error}</Alert>}
+                        {(formError || error) && <Alert severity="error">{formError || error}</Alert>}
 
-                        <Controller
+                        <TextField
                             name="email"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    type="email"
-                                    label="Email"
-                                    fullWidth
-                                    required
-                                    error={Boolean(errors.email)}
-                                    helperText={errors.email?.message}
-                                />
-                            )}
+                            type="email"
+                            label="Email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            fullWidth
+                            required
                         />
 
-                        <Controller
+                        <TextField
                             name="password"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    type="password"
-                                    label="Mật khẩu"
-                                    fullWidth
-                                    required
-                                    error={Boolean(errors.password)}
-                                    helperText={errors.password?.message}
-                                />
-                            )}
+                            type="password"
+                            label="Mật khẩu"
+                            value={formData.password}
+                            onChange={handleChange}
+                            fullWidth
+                            required
                         />
 
                         <Button type="submit" variant="contained" disabled={status === 'loading'}>

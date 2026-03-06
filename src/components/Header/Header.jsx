@@ -15,12 +15,7 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../features/auth/authSlice';
 
-const menuItems = [
-    { label: 'Trang chủ', path: '/' },
-    { label: 'Blog', path: '/blog' },
-    { label: 'Khóa học', path: '/courses' },
-    { label: 'Việc làm', path: '/jobs' },
-];
+const menuItems = [{ label: 'Dashboard', path: '/' }];
 
 const Header = () => {
     const location = useLocation();
@@ -51,7 +46,7 @@ const Header = () => {
                                 fontWeight: 700,
                             }}
                         >
-                            WP Dev Hub
+                            API App
                         </Typography>
 
                         <Stack
