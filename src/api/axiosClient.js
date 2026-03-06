@@ -1,49 +1,37 @@
-// src/api/axiosClient.js
-import axios from "axios";
+import axios from 'axios';
+import { ACCESS_TOKEN_KEY } from '../constants/storageKeys';
+import { apiConfig } from '../config/apiConfig';
 
-/**
- * Axios instance dùng chung cho toàn bộ app
- * Giúp tập trung config HTTP ở một nơi
- */
 const axiosClient = axios.create({
-	// Base URL của WP REST API
-	baseURL: import.meta.env.VITE_API_BASE_URL,
-
-	// Header mặc định cho request JSON
-	headers: {
-		"Content-Type": "application/json",
-	},
-
-	// Tránh request treo quá lâu
-	timeout: 10000,
+    baseURL: apiConfig.baseURL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    timeout: 10000,
 });
 
-/**
- * Interceptor trước khi gửi request
- * - Dùng để thêm token / params chung nếu cần
- */
 axiosClient.interceptors.request.use(
-	(config) => {
-		config.params = config.params || {};
+    (config) => {
+        const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 
-		// Ví dụ thêm auth token sau này
-		// const token = localStorage.getItem('token');
-		// if (token) {
-		//   config.headers.Authorization = `Bearer ${token}`;
-		// }
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
 
-		return config;
-	},
-	(error) => Promise.reject(error),
+        return config;
+    },
+    (error) => Promise.reject(error)
 );
 
-/**
- * Interceptor xử lý response
- * - Có thể bắt lỗi tập trung
- */
 axiosClient.interceptors.response.use(
-	(response) => response,
-	(error) => Promise.reject(error),
+    (response) => response,
+    (error) => {
+        if (error?.response?.status === 401) {
+            localStorage.removeItem(ACCESS_TOKEN_KEY);
+        }
+
+        return Promise.reject(error);
+    }
 );
 
 export default axiosClient;
