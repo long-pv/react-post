@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
     Alert,
     Badge,
+    Box,
     Button,
     Chip,
     CircularProgress,
@@ -10,7 +11,6 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Grid,
     Stack,
     TextField,
     Typography,
@@ -303,9 +303,18 @@ const ProductsPage = () => {
                 </Alert>
             )}
 
-            <Grid container spacing={2}>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                        xs: '1fr',
+                        md: 'repeat(2, minmax(0, 1fr))',
+                    },
+                    gap: 2,
+                }}
+            >
                 {paginatedProducts.map((product) => (
-                    <Grid item xs={12} md={6} key={product.id || `${product.title}-${product.name}`}>
+                    <Box key={product.id || `${product.title}-${product.name}`}>
                         <ProductCard
                             product={product}
                             onAddToCart={(item) => dispatch(addToCart(item))}
@@ -313,9 +322,9 @@ const ProductsPage = () => {
                             onEdit={openEditDialog}
                             onDelete={handleDeleteProduct}
                         />
-                    </Grid>
+                    </Box>
                 ))}
-            </Grid>
+            </Box>
 
             <Stack mt={3}>
                 <Pagination page={page} totalPages={totalPages} onChange={setPage} />
