@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { ACCESS_TOKEN_KEY } from '../constants/storageKeys';
+import { apiConfig } from '../config/apiConfig';
 
 const axiosClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
+    baseURL: apiConfig.baseURL,
     headers: {
         'Content-Type': 'application/json',
     },

@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
-import DashboardPage from './pages/DashboardPage';
+import ProductsPage from './pages/ProductsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GuestRoute from './components/Auth/GuestRoute';
@@ -10,7 +10,7 @@ const App = () => {
         <BrowserRouter>
             <MainLayout>
                 <Routes>
-                    <Route path="/" element={<DashboardPage />} />
+                    <Route path="/" element={<ProductsPage />} />
                     <Route
                         path="/login"
                         element={
