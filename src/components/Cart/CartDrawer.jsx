@@ -2,7 +2,16 @@ import { Box, Button, Divider, Drawer, IconButton, Stack, TextField, Typography 
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { formatCurrency } from '../../utils/formatCurrency';
 
-const CartDrawer = ({ open, items, onClose, onRemove, onUpdateQuantity, onClear }) => {
+const CartDrawer = ({
+    open,
+    items,
+    onClose,
+    onRemove,
+    onUpdateQuantity,
+    onClear,
+    onCheckout,
+    checkingOut = false,
+}) => {
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     return (
@@ -45,11 +54,11 @@ const CartDrawer = ({ open, items, onClose, onRemove, onUpdateQuantity, onClear 
                 </Typography>
 
                 <Stack spacing={1}>
-                    <Button variant="outlined" color="error" onClick={onClear} disabled={items.length === 0}>
+                    <Button variant="outlined" color="error" onClick={onClear} disabled={items.length === 0 || checkingOut}>
                         Xóa giỏ hàng
                     </Button>
-                    <Button variant="contained" disabled={items.length === 0}>
-                        Thanh toán (demo)
+                    <Button variant="contained" disabled={items.length === 0 || checkingOut} onClick={onCheckout}>
+                        {checkingOut ? 'Đang xử lý...' : 'Thanh toán (demo)'}
                     </Button>
                 </Stack>
             </Box>
