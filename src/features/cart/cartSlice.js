@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { USER_KEY } from '../../constants/storageKeys';
 import {
     createCartRequest,
     deleteCartRequest,
@@ -56,18 +57,27 @@ export const fetchMyCarts = createAsyncThunk('cart/fetchMyCarts', async (userId,
 
 export const syncCart = createAsyncThunk('cart/syncCart', async (_, thunkAPI) => {
     const state = thunkAPI.getState();
-    const userId = state.auth.user?.id;
     const token = state.auth.token;
     const items = state.cart.items;
 
-    if (!userId || !token) {
+    const storedUserRaw = localStorage.getItem(USER_KEY);
+    const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null;
+
+    const resolvedUserId =
+        state.auth.user?.id ||
+        state.auth.user?.userId ||
+        storedUser?.id ||
+        storedUser?.userId ||
+        1;
+
+    if (!token) {
         return thunkAPI.rejectWithValue('Cần đăng nhập để đồng bộ cart lên server');
     }
 
     try {
-        const existingCarts = await fetchCartsByUserRequest(userId);
+        const existingCarts = await fetchCartsByUserRequest(resolvedUserId);
         const payload = {
-            userId,
+            userId: resolvedUserId,
             date: new Date().toISOString(),
             products: normalizeProducts(items),
         };

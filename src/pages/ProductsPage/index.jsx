@@ -38,7 +38,6 @@ import {
     deleteServerCart,
     fetchAllCarts,
     fetchMyCarts,
-    patchServerCart,
     removeFromCart,
     syncCart,
     updateCartQuantity,
@@ -226,12 +225,6 @@ const ProductsPage = () => {
         dispatch(fetchAllCarts(params));
     };
 
-    const handlePatchServerCart = (cartId) => {
-        const payload = {
-            date: new Date().toISOString(),
-        };
-        dispatch(patchServerCart({ cartId, payload }));
-    };
 
     const handleDeleteServerCart = (cartId) => {
         dispatch(deleteServerCart(cartId));
@@ -398,9 +391,6 @@ const ProductsPage = () => {
                                 </Stack>
                             </Box>
                             <Stack direction="row" spacing={1}>
-                                <Button size="small" variant="outlined" onClick={() => handlePatchServerCart(cart.id)}>
-                                    PATCH
-                                </Button>
                                 <Button
                                     size="small"
                                     color="error"
