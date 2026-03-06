@@ -1,22 +1,12 @@
-import { configureStore } from "@reduxjs/toolkit";
-import postReducer from "./postSlice";
+import { configureStore } from '@reduxjs/toolkit';
+import postReducer from './postSlice';
+import authReducer from '../features/auth/authSlice';
 
-/**
- * Tạo Redux Store
- * Store là nơi lưu TOÀN BỘ state của app
- */
 const store = configureStore({
-	reducer: {
-		/**
-		 * posts là tên state
-		 * → dùng trong useSelector: state.posts
-		 */
-		posts: postReducer,
-	},
+    reducer: {
+        posts: postReducer,
+        auth: authReducer,
+    },
 });
 
-/**
- * Export default
- * → để file khác import đơn giản hơn
- */
 export default store;

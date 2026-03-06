@@ -1,4 +1,3 @@
-// src/pages/JobsPage/JobApplyDialog.jsx
 import {
     Dialog,
     DialogTitle,
