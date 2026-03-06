@@ -17,8 +17,6 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../features/auth/authSlice';
 
-const menuItems = [{ label: 'Sản phẩm', path: '/' }];
-
 const Header = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -28,6 +26,13 @@ const Header = () => {
     const token = useSelector((state) => state.auth.token);
     const user = useSelector((state) => state.auth.user);
     const cartCount = useSelector((state) => state.cart.items.reduce((sum, item) => sum + item.quantity, 0));
+
+    const menuItems = token
+        ? [
+              { label: 'Sản phẩm', path: '/' },
+              { label: 'Cart của tôi', path: '/carts' },
+          ]
+        : [{ label: 'Sản phẩm', path: '/' }];
 
     const handleLogout = async () => {
         await dispatch(logout());
@@ -50,7 +55,12 @@ const Header = () => {
 
                         <Stack direction="row" spacing={2} sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
                             {menuItems.map((item) => (
-                                <Button key={item.path} component={Link} to={item.path} color={location.pathname === item.path ? 'primary' : 'inherit'}>
+                                <Button
+                                    key={item.path}
+                                    component={Link}
+                                    to={item.path}
+                                    color={location.pathname === item.path ? 'primary' : 'inherit'}
+                                >
                                     {item.label}
                                 </Button>
                             ))}
@@ -62,7 +72,7 @@ const Header = () => {
                             {token ? (
                                 <>
                                     <Typography variant="body2" color="text.secondary">
-                                        Xin chào, {user?.name || user?.email || 'bạn'}
+                                        Xin chào, {user?.name || user?.email || user?.username || 'bạn'}
                                     </Typography>
                                     <Button variant="outlined" onClick={handleLogout}>
                                         Đăng xuất
@@ -70,8 +80,12 @@ const Header = () => {
                                 </>
                             ) : (
                                 <>
-                                    <Button component={Link} to="/login">Đăng nhập</Button>
-                                    <Button variant="contained" component={Link} to="/register">Đăng ký</Button>
+                                    <Button component={Link} to="/login">
+                                        Đăng nhập
+                                    </Button>
+                                    <Button variant="contained" component={Link} to="/register">
+                                        Đăng ký
+                                    </Button>
                                 </>
                             )}
                         </Stack>
@@ -87,7 +101,13 @@ const Header = () => {
                 <Box sx={{ width: 260, p: 2 }}>
                     <Stack spacing={1}>
                         {menuItems.map((item) => (
-                            <Button key={item.path} component={Link} to={item.path} onClick={() => setOpen(false)} sx={{ justifyContent: 'flex-start' }}>
+                            <Button
+                                key={item.path}
+                                component={Link}
+                                to={item.path}
+                                onClick={() => setOpen(false)}
+                                sx={{ justifyContent: 'flex-start' }}
+                            >
                                 {item.label}
                             </Button>
                         ))}
@@ -96,15 +116,31 @@ const Header = () => {
                         </Button>
 
                         {token ? (
-                            <Button onClick={() => { setOpen(false); handleLogout(); }} sx={{ justifyContent: 'flex-start' }}>
+                            <Button
+                                onClick={() => {
+                                    setOpen(false);
+                                    handleLogout();
+                                }}
+                                sx={{ justifyContent: 'flex-start' }}
+                            >
                                 Đăng xuất
                             </Button>
                         ) : (
                             <>
-                                <Button component={Link} to="/login" onClick={() => setOpen(false)} sx={{ justifyContent: 'flex-start' }}>
+                                <Button
+                                    component={Link}
+                                    to="/login"
+                                    onClick={() => setOpen(false)}
+                                    sx={{ justifyContent: 'flex-start' }}
+                                >
                                     Đăng nhập
                                 </Button>
-                                <Button component={Link} to="/register" onClick={() => setOpen(false)} sx={{ justifyContent: 'flex-start' }}>
+                                <Button
+                                    component={Link}
+                                    to="/register"
+                                    onClick={() => setOpen(false)}
+                                    sx={{ justifyContent: 'flex-start' }}
+                                >
                                     Đăng ký
                                 </Button>
                             </>

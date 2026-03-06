@@ -16,7 +16,6 @@ import {
     Typography,
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import CloudSyncIcon from '@mui/icons-material/CloudSync';
 import AddIcon from '@mui/icons-material/Add';
 import { useDispatch, useSelector } from 'react-redux';
 import ProductCard from '../../components/Products/ProductCard';
@@ -31,17 +30,7 @@ import {
     removeCustomCategory,
     updateProduct,
 } from '../../features/products/productsSlice';
-import {
-    addToCart,
-    clearCart,
-    clearSyncMessage,
-    deleteServerCart,
-    fetchAllCarts,
-    fetchMyCarts,
-    removeFromCart,
-    syncCart,
-    updateCartQuantity,
-} from '../../features/cart/cartSlice';
+import { addToCart, clearCart, removeFromCart, syncCart, updateCartQuantity } from '../../features/cart/cartSlice';
 
 const initialFormValues = {
     title: '',
@@ -64,11 +53,6 @@ const ProductsPage = () => {
     const [page, setPage] = useState(1);
     const [checkoutMessage, setCheckoutMessage] = useState('');
 
-    const [cartFilters, setCartFilters] = useState({
-        startdate: '',
-        enddate: '',
-    });
-
     const {
         items: products,
         status,
@@ -78,14 +62,8 @@ const ProductsPage = () => {
         categories,
         customCategories,
     } = useSelector((state) => state.products);
-    const {
-        items: cartItems,
-        syncStatus,
-        syncMessage,
-        serverCarts,
-        error: cartError,
-    } = useSelector((state) => state.cart);
-    const { user, token } = useSelector((state) => state.auth);
+    const { items: cartItems, syncStatus, error: cartError } = useSelector((state) => state.cart);
+    const token = useSelector((state) => state.auth.token);
 
     const isAuthenticated = Boolean(token);
 
@@ -94,21 +72,7 @@ const ProductsPage = () => {
         dispatch(fetchProductCategories());
     }, [dispatch]);
 
-    useEffect(() => {
-        if (token && user?.id) {
-            dispatch(fetchMyCarts(user.id));
-        }
-    }, [dispatch, token, user?.id]);
-
     const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
-
-    const productNameMap = useMemo(() => {
-        const map = {};
-        products.forEach((item) => {
-            map[item.id] = item.title || item.name || `Product #${item.id}`;
-        });
-        return map;
-    }, [products]);
 
     const mergedCategories = useMemo(() => {
         const fromProducts = products
@@ -154,15 +118,6 @@ const ProductsPage = () => {
         });
         setProductFormError('');
         setProductDialogOpen(true);
-    };
-
-    const closeDialog = () => {
-        setProductDialogOpen(false);
-    };
-
-    const handleProductFormChange = (event) => {
-        const { name, value } = event.target;
-        setProductForm((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmitProduct = async (event) => {
@@ -213,23 +168,6 @@ const ProductsPage = () => {
         }
     };
 
-    const handleFilterChange = (event) => {
-        const { name, value } = event.target;
-        setCartFilters((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleFetchCarts = () => {
-        const params = {};
-        if (cartFilters.startdate) params.startdate = cartFilters.startdate;
-        if (cartFilters.enddate) params.enddate = cartFilters.enddate;
-        dispatch(fetchAllCarts(params));
-    };
-
-
-    const handleDeleteServerCart = (cartId) => {
-        dispatch(deleteServerCart(cartId));
-    };
-
     const handleCheckout = async () => {
         setCheckoutMessage('');
         const resultAction = await dispatch(syncCart({ forceCreate: true }));
@@ -237,11 +175,7 @@ const ProductsPage = () => {
         if (syncCart.fulfilled.match(resultAction)) {
             dispatch(clearCart());
             setCartOpen(false);
-            setCheckoutMessage('Thanh toán thành công. Giỏ hàng đã được cập nhật lên server và làm trống.');
-
-            if (user?.id) {
-                dispatch(fetchMyCarts(user.id));
-            }
+            setCheckoutMessage('Thanh toán thành công. Cart mới đã được tạo trên server.');
         }
     };
 
@@ -251,7 +185,7 @@ const ProductsPage = () => {
                 <div>
                     <Typography variant="h4">Danh sách sản phẩm</Typography>
                     <Typography variant="body2" color="text.secondary">
-                        GET /ecommerce/api/products • Hiển thị 5 sản phẩm / trang
+                        Hiển thị 5 sản phẩm / trang
                     </Typography>
                 </div>
 
@@ -261,14 +195,6 @@ const ProductsPage = () => {
                             Thêm sản phẩm
                         </Button>
                     )}
-                    <Button
-                        variant="outlined"
-                        startIcon={<CloudSyncIcon />}
-                        onClick={() => dispatch(syncCart())}
-                        disabled={syncStatus === 'loading'}
-                    >
-                        {syncStatus === 'loading' ? 'Đang sync...' : 'Sync cart API'}
-                    </Button>
                     <Button
                         variant="outlined"
                         startIcon={
@@ -323,87 +249,14 @@ const ProductsPage = () => {
                 )}
             </Stack>
 
-            <Stack spacing={1} mb={2}>
-                <Typography variant="subtitle1">Quản lý Carts</Typography>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                    <TextField
-                        size="small"
-                        name="startdate"
-                        type="date"
-                        label="startdate"
-                        value={cartFilters.startdate}
-                        onChange={handleFilterChange}
-                        InputLabelProps={{ shrink: true }}
-                    />
-                    <TextField
-                        size="small"
-                        name="enddate"
-                        type="date"
-                        label="enddate"
-                        value={cartFilters.enddate}
-                        onChange={handleFilterChange}
-                        InputLabelProps={{ shrink: true }}
-                    />
-                    <Button variant="outlined" onClick={handleFetchCarts}>
-                        GET /carts
-                    </Button>
-                </Stack>
-            </Stack>
-
             {checkoutMessage && (
                 <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCheckoutMessage('')}>
                     {checkoutMessage}
                 </Alert>
             )}
 
-            {syncMessage && (
-                <Alert severity="success" sx={{ mb: 2 }} onClose={() => dispatch(clearSyncMessage())}>
-                    {syncMessage}
-                </Alert>
-            )}
-
-            {cartError && (
-                <Alert severity="warning" sx={{ mb: 2 }} onClose={() => dispatch(clearSyncMessage())}>
-                    {cartError}
-                </Alert>
-            )}
-
+            {cartError && <Alert severity="warning" sx={{ mb: 2 }}>{cartError}</Alert>}
             {mutationError && <Alert severity="error" sx={{ mb: 2 }}>{mutationError}</Alert>}
-
-            <Alert severity="info" sx={{ mb: 2 }}>
-                Server carts hiện có: {serverCarts.length} (endpoint: /ecommerce/api/carts)
-            </Alert>
-
-            <Stack spacing={1} mb={3}>
-                {serverCarts.slice(0, 5).map((cart) => (
-                    <Box key={cart.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
-                        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1}>
-                            <Box>
-                                <Typography variant="body2">
-                                    Cart #{cart.id} • userId: {cart.userId} • date: {cart.date}
-                                </Typography>
-                                <Stack mt={0.5} spacing={0.5}>
-                                    {(cart.products || []).map((product) => (
-                                        <Typography key={`${cart.id}-${product.productId}`} variant="caption" color="text.secondary">
-                                            Product ID: {product.productId} • Tên: {productNameMap[product.productId] || 'Chưa có tên'} • Qty: {product.quantity}
-                                        </Typography>
-                                    ))}
-                                </Stack>
-                            </Box>
-                            <Stack direction="row" spacing={1}>
-                                <Button
-                                    size="small"
-                                    color="error"
-                                    variant="outlined"
-                                    onClick={() => handleDeleteServerCart(cart.id)}
-                                >
-                                    DELETE
-                                </Button>
-                            </Stack>
-                        </Stack>
-                    </Box>
-                ))}
-            </Stack>
 
             {status === 'loading' && (
                 <Stack alignItems="center" py={8}>
@@ -414,9 +267,7 @@ const ProductsPage = () => {
             {status === 'failed' && <Alert severity="error">Không thể tải sản phẩm: {error}</Alert>}
 
             {status === 'succeeded' && filteredProducts.length === 0 && (
-                <Alert severity="warning">
-                    Không có sản phẩm phù hợp danh mục đang chọn hoặc API trả về rỗng.
-                </Alert>
+                <Alert severity="warning">Không có sản phẩm phù hợp danh mục đang chọn hoặc API trả về rỗng.</Alert>
             )}
 
             <Box
@@ -457,19 +308,19 @@ const ProductsPage = () => {
                 checkingOut={syncStatus === 'loading'}
             />
 
-            <Dialog open={productDialogOpen} onClose={closeDialog} maxWidth="sm" fullWidth>
+            <Dialog open={productDialogOpen} onClose={() => setProductDialogOpen(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{editingProductId ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm'}</DialogTitle>
                 <DialogContent>
                     <Stack spacing={2} mt={1} component="form" onSubmit={handleSubmitProduct}>
                         {productFormError && <Alert severity="error">{productFormError}</Alert>}
 
-                        <TextField name="title" label="Title" value={productForm.title} onChange={handleProductFormChange} required fullWidth />
-                        <TextField name="price" label="Price" type="number" value={productForm.price} onChange={handleProductFormChange} required fullWidth />
-                        <TextField name="description" label="Description" value={productForm.description} onChange={handleProductFormChange} multiline rows={3} fullWidth />
-                        <TextField name="category" label="Category" value={productForm.category} onChange={handleProductFormChange} fullWidth />
+                        <TextField name="title" label="Title" value={productForm.title} onChange={(e)=>setProductForm((p)=>({...p,title:e.target.value}))} required fullWidth />
+                        <TextField name="price" label="Price" type="number" value={productForm.price} onChange={(e)=>setProductForm((p)=>({...p,price:e.target.value}))} required fullWidth />
+                        <TextField name="description" label="Description" value={productForm.description} onChange={(e)=>setProductForm((p)=>({...p,description:e.target.value}))} multiline rows={3} fullWidth />
+                        <TextField name="category" label="Category" value={productForm.category} onChange={(e)=>setProductForm((p)=>({...p,category:e.target.value}))} fullWidth />
 
                         <DialogActions sx={{ px: 0 }}>
-                            <Button onClick={closeDialog}>Hủy</Button>
+                            <Button onClick={() => setProductDialogOpen(false)}>Hủy</Button>
                             <Button type="submit" variant="contained" disabled={mutationStatus === 'loading'}>
                                 {mutationStatus === 'loading' ? 'Đang lưu...' : 'Lưu'}
                             </Button>
