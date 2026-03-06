@@ -9,9 +9,16 @@ const normalizeArray = (payload) => {
     return [];
 };
 
-export const fetchAllCartsRequest = async () => {
-    const response = await axiosClient.get(apiConfig.carts.listPath);
+const normalizeObject = (payload) => payload?.data || payload;
+
+export const fetchAllCartsRequest = async (params = {}) => {
+    const response = await axiosClient.get(apiConfig.carts.listPath, { params });
     return normalizeArray(response.data);
+};
+
+export const fetchCartByIdRequest = async (cartId) => {
+    const response = await axiosClient.get(`${apiConfig.carts.listPath}/${cartId}`);
+    return normalizeObject(response.data);
 };
 
 export const fetchCartsByUserRequest = async (userId) => {
@@ -22,10 +29,20 @@ export const fetchCartsByUserRequest = async (userId) => {
 
 export const createCartRequest = async (payload) => {
     const response = await axiosClient.post(apiConfig.carts.listPath, payload);
-    return response.data;
+    return normalizeObject(response.data);
 };
 
 export const updateCartRequest = async (cartId, payload) => {
     const response = await axiosClient.put(`${apiConfig.carts.listPath}/${cartId}`, payload);
-    return response.data;
+    return normalizeObject(response.data);
+};
+
+export const patchCartRequest = async (cartId, payload) => {
+    const response = await axiosClient.patch(`${apiConfig.carts.listPath}/${cartId}`, payload);
+    return normalizeObject(response.data);
+};
+
+export const deleteCartRequest = async (cartId) => {
+    const response = await axiosClient.delete(`${apiConfig.carts.listPath}/${cartId}`);
+    return normalizeObject(response.data);
 };

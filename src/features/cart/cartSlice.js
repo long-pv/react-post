@@ -1,8 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
     createCartRequest,
+    deleteCartRequest,
     fetchAllCartsRequest,
+    fetchCartByIdRequest,
     fetchCartsByUserRequest,
+    patchCartRequest,
     updateCartRequest,
 } from './cartApi';
 
@@ -27,11 +30,19 @@ const normalizeProducts = (items = []) =>
         quantity: Number(item.quantity || 1),
     }));
 
-export const fetchAllCarts = createAsyncThunk('cart/fetchAllCarts', async (_, thunkAPI) => {
+export const fetchAllCarts = createAsyncThunk('cart/fetchAllCarts', async (params, thunkAPI) => {
     try {
-        return await fetchAllCartsRequest();
+        return await fetchAllCartsRequest(params || {});
     } catch (error) {
-        return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Không lấy được carts');
+        return thunkAPI.rejectWithValue(error?.response?.data?.detail || error?.response?.data?.message || 'Không lấy được carts');
+    }
+});
+
+export const fetchCartById = createAsyncThunk('cart/fetchCartById', async (cartId, thunkAPI) => {
+    try {
+        return await fetchCartByIdRequest(cartId);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error?.response?.data?.detail || error?.response?.data?.message || 'Không lấy được cart theo id');
     }
 });
 
@@ -39,7 +50,7 @@ export const fetchMyCarts = createAsyncThunk('cart/fetchMyCarts', async (userId,
     try {
         return await fetchCartsByUserRequest(userId);
     } catch (error) {
-        return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Không lấy được cart của user');
+        return thunkAPI.rejectWithValue(error?.response?.data?.detail || error?.response?.data?.message || 'Không lấy được cart của user');
     }
 });
 
@@ -67,7 +78,24 @@ export const syncCart = createAsyncThunk('cart/syncCart', async (_, thunkAPI) =>
 
         return await createCartRequest(payload);
     } catch (error) {
-        return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Sync cart thất bại');
+        return thunkAPI.rejectWithValue(error?.response?.data?.detail || error?.response?.data?.message || 'Sync cart thất bại');
+    }
+});
+
+export const patchServerCart = createAsyncThunk('cart/patchServerCart', async ({ cartId, payload }, thunkAPI) => {
+    try {
+        return await patchCartRequest(cartId, payload);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error?.response?.data?.detail || error?.response?.data?.message || 'Patch cart thất bại');
+    }
+});
+
+export const deleteServerCart = createAsyncThunk('cart/deleteServerCart', async (cartId, thunkAPI) => {
+    try {
+        await deleteCartRequest(cartId);
+        return cartId;
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error?.response?.data?.detail || error?.response?.data?.message || 'Xóa cart thất bại');
     }
 });
 
@@ -76,6 +104,7 @@ const cartSlice = createSlice({
     initialState: {
         items: loadInitialCart(),
         serverCarts: [],
+        selectedServerCart: null,
         status: 'idle',
         error: null,
         syncStatus: 'idle',
@@ -134,6 +163,18 @@ const cartSlice = createSlice({
                 state.status = 'failed';
                 state.error = action.payload;
             })
+            .addCase(fetchCartById.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(fetchCartById.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.selectedServerCart = action.payload;
+            })
+            .addCase(fetchCartById.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
+            })
             .addCase(fetchMyCarts.pending, (state) => {
                 state.status = 'loading';
                 state.error = null;
@@ -157,6 +198,37 @@ const cartSlice = createSlice({
                 state.serverCarts = [action.payload, ...state.serverCarts.filter((cart) => cart.id !== action.payload?.id)];
             })
             .addCase(syncCart.rejected, (state, action) => {
+                state.syncStatus = 'failed';
+                state.error = action.payload;
+            })
+            .addCase(patchServerCart.pending, (state) => {
+                state.syncStatus = 'loading';
+                state.error = null;
+            })
+            .addCase(patchServerCart.fulfilled, (state, action) => {
+                state.syncStatus = 'succeeded';
+                state.syncMessage = 'Patch cart thành công';
+                const patched = action.payload;
+                if (!patched?.id) return;
+                const idx = state.serverCarts.findIndex((item) => item.id === patched.id);
+                if (idx !== -1) {
+                    state.serverCarts[idx] = patched;
+                }
+            })
+            .addCase(patchServerCart.rejected, (state, action) => {
+                state.syncStatus = 'failed';
+                state.error = action.payload;
+            })
+            .addCase(deleteServerCart.pending, (state) => {
+                state.syncStatus = 'loading';
+                state.error = null;
+            })
+            .addCase(deleteServerCart.fulfilled, (state, action) => {
+                state.syncStatus = 'succeeded';
+                state.syncMessage = 'Xóa cart server thành công';
+                state.serverCarts = state.serverCarts.filter((item) => item.id !== action.payload);
+            })
+            .addCase(deleteServerCart.rejected, (state, action) => {
                 state.syncStatus = 'failed';
                 state.error = action.payload;
             });

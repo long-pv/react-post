@@ -35,7 +35,11 @@ import {
     addToCart,
     clearCart,
     clearSyncMessage,
+    deleteServerCart,
+    fetchAllCarts,
+    fetchCartById,
     fetchMyCarts,
+    patchServerCart,
     removeFromCart,
     syncCart,
     updateCartQuantity,
@@ -61,11 +65,31 @@ const ProductsPage = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [page, setPage] = useState(1);
 
-    const { items: products, status, error, mutationStatus, mutationError, categories, customCategories } =
-        useSelector((state) => state.products);
-    const { items: cartItems, syncStatus, syncMessage, serverCarts, error: cartError } = useSelector(
-        (state) => state.cart
-    );
+    const [cartFilters, setCartFilters] = useState({
+        startdate: '',
+        enddate: '',
+        limit: '',
+        sort: 'desc',
+    });
+    const [cartIdInput, setCartIdInput] = useState('');
+
+    const {
+        items: products,
+        status,
+        error,
+        mutationStatus,
+        mutationError,
+        categories,
+        customCategories,
+    } = useSelector((state) => state.products);
+    const {
+        items: cartItems,
+        syncStatus,
+        syncMessage,
+        serverCarts,
+        selectedServerCart,
+        error: cartError,
+    } = useSelector((state) => state.cart);
     const { user, token } = useSelector((state) => state.auth);
 
     const isAuthenticated = Boolean(token);
@@ -81,10 +105,7 @@ const ProductsPage = () => {
         }
     }, [dispatch, token, user?.id]);
 
-    const cartCount = useMemo(
-        () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
-        [cartItems]
-    );
+    const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
 
     const mergedCategories = useMemo(() => {
         const fromProducts = products
@@ -189,6 +210,36 @@ const ProductsPage = () => {
         }
     };
 
+    const handleFilterChange = (event) => {
+        const { name, value } = event.target;
+        setCartFilters((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleFetchCarts = () => {
+        const params = {};
+        if (cartFilters.startdate) params.startdate = cartFilters.startdate;
+        if (cartFilters.enddate) params.enddate = cartFilters.enddate;
+        if (cartFilters.limit) params.limit = Number(cartFilters.limit);
+        if (cartFilters.sort) params.sort = cartFilters.sort;
+        dispatch(fetchAllCarts(params));
+    };
+
+    const handleFetchCartById = () => {
+        if (!cartIdInput) return;
+        dispatch(fetchCartById(Number(cartIdInput)));
+    };
+
+    const handlePatchServerCart = (cartId) => {
+        const payload = {
+            date: new Date().toISOString(),
+        };
+        dispatch(patchServerCart({ cartId, payload }));
+    };
+
+    const handleDeleteServerCart = (cartId) => {
+        dispatch(deleteServerCart(cartId));
+    };
+
     return (
         <Container maxWidth="lg" sx={{ py: 6 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={1}>
@@ -267,6 +318,62 @@ const ProductsPage = () => {
                 )}
             </Stack>
 
+            <Stack spacing={1} mb={2}>
+                <Typography variant="subtitle1">Quản lý Server Carts (theo docs)</Typography>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                    <TextField
+                        size="small"
+                        name="startdate"
+                        type="date"
+                        label="startdate"
+                        value={cartFilters.startdate}
+                        onChange={handleFilterChange}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                        size="small"
+                        name="enddate"
+                        type="date"
+                        label="enddate"
+                        value={cartFilters.enddate}
+                        onChange={handleFilterChange}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                        size="small"
+                        name="limit"
+                        type="number"
+                        label="limit"
+                        value={cartFilters.limit}
+                        onChange={handleFilterChange}
+                    />
+                    <TextField
+                        size="small"
+                        name="sort"
+                        label="sort"
+                        value={cartFilters.sort}
+                        onChange={handleFilterChange}
+                        placeholder="asc | desc"
+                    />
+                    <Button variant="outlined" onClick={handleFetchCarts}>
+                        GET /carts
+                    </Button>
+                </Stack>
+
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                    <TextField
+                        size="small"
+                        type="number"
+                        label="Cart ID"
+                        value={cartIdInput}
+                        onChange={(event) => setCartIdInput(event.target.value)}
+                    />
+                    <Button variant="outlined" onClick={handleFetchCartById}>
+                        GET /carts/{'{id}'}
+                    </Button>
+                </Stack>
+            </Stack>
+
             {syncMessage && (
                 <Alert severity="success" sx={{ mb: 2 }} onClose={() => dispatch(clearSyncMessage())}>
                     {syncMessage}
@@ -279,15 +386,39 @@ const ProductsPage = () => {
                 </Alert>
             )}
 
-            {mutationError && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {mutationError}
-                </Alert>
-            )}
+            {mutationError && <Alert severity="error" sx={{ mb: 2 }}>{mutationError}</Alert>}
 
             <Alert severity="info" sx={{ mb: 2 }}>
                 Server carts hiện có: {serverCarts.length} (endpoint: /ecommerce/api/carts)
             </Alert>
+
+            {selectedServerCart && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                    Cart theo ID: #{selectedServerCart.id} • userId: {selectedServerCart.userId} • products:
+                    {' '}
+                    {selectedServerCart.products?.length || 0}
+                </Alert>
+            )}
+
+            <Stack spacing={1} mb={3}>
+                {serverCarts.slice(0, 5).map((cart) => (
+                    <Box key={cart.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1}>
+                            <Typography variant="body2">
+                                Cart #{cart.id} • userId: {cart.userId} • date: {cart.date}
+                            </Typography>
+                            <Stack direction="row" spacing={1}>
+                                <Button size="small" variant="outlined" onClick={() => handlePatchServerCart(cart.id)}>
+                                    PATCH
+                                </Button>
+                                <Button size="small" color="error" variant="outlined" onClick={() => handleDeleteServerCart(cart.id)}>
+                                    DELETE
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    </Box>
+                ))}
+            </Stack>
 
             {status === 'loading' && (
                 <Stack alignItems="center" py={8}>
@@ -345,39 +476,10 @@ const ProductsPage = () => {
                     <Stack spacing={2} mt={1} component="form" onSubmit={handleSubmitProduct}>
                         {productFormError && <Alert severity="error">{productFormError}</Alert>}
 
-                        <TextField
-                            name="title"
-                            label="Title"
-                            value={productForm.title}
-                            onChange={handleProductFormChange}
-                            required
-                            fullWidth
-                        />
-                        <TextField
-                            name="price"
-                            label="Price"
-                            type="number"
-                            value={productForm.price}
-                            onChange={handleProductFormChange}
-                            required
-                            fullWidth
-                        />
-                        <TextField
-                            name="description"
-                            label="Description"
-                            value={productForm.description}
-                            onChange={handleProductFormChange}
-                            multiline
-                            rows={3}
-                            fullWidth
-                        />
-                        <TextField
-                            name="category"
-                            label="Category"
-                            value={productForm.category}
-                            onChange={handleProductFormChange}
-                            fullWidth
-                        />
+                        <TextField name="title" label="Title" value={productForm.title} onChange={handleProductFormChange} required fullWidth />
+                        <TextField name="price" label="Price" type="number" value={productForm.price} onChange={handleProductFormChange} required fullWidth />
+                        <TextField name="description" label="Description" value={productForm.description} onChange={handleProductFormChange} multiline rows={3} fullWidth />
+                        <TextField name="category" label="Category" value={productForm.category} onChange={handleProductFormChange} fullWidth />
 
                         <DialogActions sx={{ px: 0 }}>
                             <Button onClick={closeDialog}>Hủy</Button>
