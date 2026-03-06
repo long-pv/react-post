@@ -3,6 +3,7 @@ import {
     Alert,
     Badge,
     Button,
+    Chip,
     CircularProgress,
     Container,
     Dialog,
@@ -20,10 +21,14 @@ import AddIcon from '@mui/icons-material/Add';
 import { useDispatch, useSelector } from 'react-redux';
 import ProductCard from '../../components/Products/ProductCard';
 import CartDrawer from '../../components/Cart/CartDrawer';
+import Pagination from '../../components/Common/Pagination';
 import {
+    addCustomCategory,
     createProduct,
     deleteProduct,
+    fetchProductCategories,
     fetchProducts,
+    removeCustomCategory,
     updateProduct,
 } from '../../features/products/productsSlice';
 import {
@@ -40,9 +45,10 @@ const initialFormValues = {
     title: '',
     price: '',
     description: '',
-    image: '',
     category: '',
 };
+
+const ITEMS_PER_PAGE = 5;
 
 const ProductsPage = () => {
     const dispatch = useDispatch();
@@ -51,27 +57,22 @@ const ProductsPage = () => {
     const [editingProductId, setEditingProductId] = useState(null);
     const [productForm, setProductForm] = useState(initialFormValues);
     const [productFormError, setProductFormError] = useState('');
+    const [newCategory, setNewCategory] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [page, setPage] = useState(1);
 
-    const {
-        items: products,
-        status,
-        error,
-        mutationStatus,
-        mutationError,
-    } = useSelector((state) => state.products);
-    const {
-        items: cartItems,
-        syncStatus,
-        syncMessage,
-        serverCarts,
-        error: cartError,
-    } = useSelector((state) => state.cart);
+    const { items: products, status, error, mutationStatus, mutationError, categories, customCategories } =
+        useSelector((state) => state.products);
+    const { items: cartItems, syncStatus, syncMessage, serverCarts, error: cartError } = useSelector(
+        (state) => state.cart
+    );
     const { user, token } = useSelector((state) => state.auth);
 
     const isAuthenticated = Boolean(token);
 
     useEffect(() => {
         dispatch(fetchProducts());
+        dispatch(fetchProductCategories());
     }, [dispatch]);
 
     useEffect(() => {
@@ -80,7 +81,37 @@ const ProductsPage = () => {
         }
     }, [dispatch, token, user?.id]);
 
-    const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
+    const cartCount = useMemo(
+        () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
+        [cartItems]
+    );
+
+    const mergedCategories = useMemo(() => {
+        const fromProducts = products
+            .map((item) => item.category)
+            .filter(Boolean)
+            .map((item) => String(item));
+
+        return [...new Set([...categories.map(String), ...fromProducts, ...customCategories])];
+    }, [categories, customCategories, products]);
+
+    const filteredProducts = useMemo(() => {
+        if (selectedCategory === 'all') return products;
+        return products.filter((item) => String(item.category || '') === selectedCategory);
+    }, [products, selectedCategory]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
+
+    const paginatedProducts = useMemo(() => {
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredProducts, page]);
 
     const openAddDialog = () => {
         setEditingProductId(null);
@@ -95,7 +126,6 @@ const ProductsPage = () => {
             title: product.title || product.name || '',
             price: String(product.price || product.cost || ''),
             description: product.description || '',
-            image: product.image || product.thumbnail || '',
             category: product.category || '',
         });
         setProductFormError('');
@@ -124,7 +154,6 @@ const ProductsPage = () => {
             title: productForm.title,
             price: Number(productForm.price),
             description: productForm.description,
-            image: productForm.image,
             category: productForm.category,
         };
 
@@ -145,13 +174,28 @@ const ProductsPage = () => {
         dispatch(fetchProducts());
     };
 
+    const handleAddCategory = () => {
+        const value = newCategory.trim();
+        if (!value) return;
+        dispatch(addCustomCategory(value));
+        setNewCategory('');
+    };
+
+    const handleDeleteCategory = (category) => {
+        dispatch(removeCustomCategory(category));
+        if (selectedCategory === category) {
+            setSelectedCategory('all');
+            setPage(1);
+        }
+    };
+
     return (
         <Container maxWidth="lg" sx={{ py: 6 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={1}>
                 <div>
                     <Typography variant="h4">Danh sách sản phẩm</Typography>
                     <Typography variant="body2" color="text.secondary">
-                        GET /ecommerce/api/products
+                        GET /ecommerce/api/products • Hiển thị 5 sản phẩm / trang
                     </Typography>
                 </div>
 
@@ -183,6 +227,46 @@ const ProductsPage = () => {
                 </Stack>
             </Stack>
 
+            <Stack spacing={1} mb={2}>
+                <Typography variant="subtitle1">Danh mục sản phẩm</Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Chip
+                        label="Tất cả"
+                        color={selectedCategory === 'all' ? 'primary' : 'default'}
+                        onClick={() => {
+                            setSelectedCategory('all');
+                            setPage(1);
+                        }}
+                    />
+                    {mergedCategories.map((category) => (
+                        <Chip
+                            key={category}
+                            label={category}
+                            color={selectedCategory === category ? 'primary' : 'default'}
+                            onClick={() => {
+                                setSelectedCategory(category);
+                                setPage(1);
+                            }}
+                            onDelete={isAuthenticated ? () => handleDeleteCategory(category) : undefined}
+                        />
+                    ))}
+                </Stack>
+
+                {isAuthenticated && (
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        <TextField
+                            size="small"
+                            label="Thêm danh mục mới"
+                            value={newCategory}
+                            onChange={(event) => setNewCategory(event.target.value)}
+                        />
+                        <Button variant="outlined" onClick={handleAddCategory}>
+                            Thêm danh mục
+                        </Button>
+                    </Stack>
+                )}
+            </Stack>
+
             {syncMessage && (
                 <Alert severity="success" sx={{ mb: 2 }} onClose={() => dispatch(clearSyncMessage())}>
                     {syncMessage}
@@ -195,7 +279,11 @@ const ProductsPage = () => {
                 </Alert>
             )}
 
-            {mutationError && <Alert severity="error" sx={{ mb: 2 }}>{mutationError}</Alert>}
+            {mutationError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {mutationError}
+                </Alert>
+            )}
 
             <Alert severity="info" sx={{ mb: 2 }}>
                 Server carts hiện có: {serverCarts.length} (endpoint: /ecommerce/api/carts)
@@ -209,13 +297,15 @@ const ProductsPage = () => {
 
             {status === 'failed' && <Alert severity="error">Không thể tải sản phẩm: {error}</Alert>}
 
-            {status === 'succeeded' && products.length === 0 && (
-                <Alert severity="warning">API trả về rỗng hoặc endpoint chưa đúng. Kiểm tra lại endpoint products.</Alert>
+            {status === 'succeeded' && filteredProducts.length === 0 && (
+                <Alert severity="warning">
+                    Không có sản phẩm phù hợp danh mục đang chọn hoặc API trả về rỗng.
+                </Alert>
             )}
 
             <Grid container spacing={2}>
-                {products.map((product) => (
-                    <Grid item xs={12} sm={6} md={4} key={product.id || `${product.title}-${product.name}`}>
+                {paginatedProducts.map((product) => (
+                    <Grid item xs={12} md={6} key={product.id || `${product.title}-${product.name}`}>
                         <ProductCard
                             product={product}
                             onAddToCart={(item) => dispatch(addToCart(item))}
@@ -226,6 +316,10 @@ const ProductsPage = () => {
                     </Grid>
                 ))}
             </Grid>
+
+            <Stack mt={3}>
+                <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            </Stack>
 
             <CartDrawer
                 open={cartOpen}
@@ -242,11 +336,39 @@ const ProductsPage = () => {
                     <Stack spacing={2} mt={1} component="form" onSubmit={handleSubmitProduct}>
                         {productFormError && <Alert severity="error">{productFormError}</Alert>}
 
-                        <TextField name="title" label="Title" value={productForm.title} onChange={handleProductFormChange} required fullWidth />
-                        <TextField name="price" label="Price" type="number" value={productForm.price} onChange={handleProductFormChange} required fullWidth />
-                        <TextField name="description" label="Description" value={productForm.description} onChange={handleProductFormChange} multiline rows={3} fullWidth />
-                        <TextField name="image" label="Image URL" value={productForm.image} onChange={handleProductFormChange} fullWidth />
-                        <TextField name="category" label="Category" value={productForm.category} onChange={handleProductFormChange} fullWidth />
+                        <TextField
+                            name="title"
+                            label="Title"
+                            value={productForm.title}
+                            onChange={handleProductFormChange}
+                            required
+                            fullWidth
+                        />
+                        <TextField
+                            name="price"
+                            label="Price"
+                            type="number"
+                            value={productForm.price}
+                            onChange={handleProductFormChange}
+                            required
+                            fullWidth
+                        />
+                        <TextField
+                            name="description"
+                            label="Description"
+                            value={productForm.description}
+                            onChange={handleProductFormChange}
+                            multiline
+                            rows={3}
+                            fullWidth
+                        />
+                        <TextField
+                            name="category"
+                            label="Category"
+                            value={productForm.category}
+                            onChange={handleProductFormChange}
+                            fullWidth
+                        />
 
                         <DialogActions sx={{ px: 0 }}>
                             <Button onClick={closeDialog}>Hủy</Button>

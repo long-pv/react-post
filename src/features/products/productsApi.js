@@ -9,9 +9,22 @@ const normalizeProductsPayload = (payload) => {
     return [];
 };
 
+const normalizeCategoriesPayload = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.items)) return payload.items;
+    if (Array.isArray(payload?.categories)) return payload.categories;
+    return [];
+};
+
 export const fetchProductsRequest = async () => {
     const response = await axiosClient.get(apiConfig.products.listPath);
     return normalizeProductsPayload(response.data);
+};
+
+export const fetchProductCategoriesRequest = async () => {
+    const response = await axiosClient.get(apiConfig.products.categoriesPath);
+    return normalizeCategoriesPayload(response.data);
 };
 
 export const createProductRequest = async (payload) => {

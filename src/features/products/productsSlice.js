@@ -2,9 +2,25 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
     createProductRequest,
     deleteProductRequest,
+    fetchProductCategoriesRequest,
     fetchProductsRequest,
     updateProductRequest,
 } from './productsApi';
+
+const CUSTOM_CATEGORIES_KEY = 'custom_product_categories';
+
+const loadCustomCategories = () => {
+    try {
+        const raw = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+};
+
+const saveCustomCategories = (categories) => {
+    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(categories));
+};
 
 export const fetchProducts = createAsyncThunk('products/fetchProducts', async (_, thunkAPI) => {
     try {
@@ -12,6 +28,15 @@ export const fetchProducts = createAsyncThunk('products/fetchProducts', async (_
         return data;
     } catch (error) {
         return thunkAPI.rejectWithValue(error?.response?.data?.message || error?.message || 'Không lấy được sản phẩm');
+    }
+});
+
+export const fetchProductCategories = createAsyncThunk('products/fetchProductCategories', async (_, thunkAPI) => {
+    try {
+        const data = await fetchProductCategoriesRequest();
+        return data;
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Không lấy được danh mục');
     }
 });
 
@@ -43,6 +68,13 @@ export const deleteProduct = createAsyncThunk('products/deleteProduct', async (p
     }
 });
 
+const normalizeCategoryName = (category) => {
+    if (typeof category === 'string') return category;
+    if (category?.name) return category.name;
+    if (category?.slug) return category.slug;
+    return '';
+};
+
 const productsSlice = createSlice({
     name: 'products',
     initialState: {
@@ -51,10 +83,25 @@ const productsSlice = createSlice({
         error: null,
         mutationStatus: 'idle',
         mutationError: null,
+        categories: [],
+        categoriesStatus: 'idle',
+        categoriesError: null,
+        customCategories: loadCustomCategories(),
     },
     reducers: {
         clearProductMutationError(state) {
             state.mutationError = null;
+        },
+        addCustomCategory(state, action) {
+            const category = action.payload?.trim();
+            if (!category) return;
+            if (state.customCategories.includes(category)) return;
+            state.customCategories.push(category);
+            saveCustomCategories(state.customCategories);
+        },
+        removeCustomCategory(state, action) {
+            state.customCategories = state.customCategories.filter((item) => item !== action.payload);
+            saveCustomCategories(state.customCategories);
         },
     },
     extraReducers: (builder) => {
@@ -70,6 +117,20 @@ const productsSlice = createSlice({
             .addCase(fetchProducts.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload;
+            })
+            .addCase(fetchProductCategories.pending, (state) => {
+                state.categoriesStatus = 'loading';
+                state.categoriesError = null;
+            })
+            .addCase(fetchProductCategories.fulfilled, (state, action) => {
+                state.categoriesStatus = 'succeeded';
+                state.categories = action.payload
+                    .map(normalizeCategoryName)
+                    .filter(Boolean);
+            })
+            .addCase(fetchProductCategories.rejected, (state, action) => {
+                state.categoriesStatus = 'failed';
+                state.categoriesError = action.payload;
             })
             .addCase(createProduct.pending, (state) => {
                 state.mutationStatus = 'loading';
@@ -118,6 +179,10 @@ const productsSlice = createSlice({
     },
 });
 
-export const { clearProductMutationError } = productsSlice.actions;
+export const {
+    clearProductMutationError,
+    addCustomCategory,
+    removeCustomCategory,
+} = productsSlice.actions;
 
 export default productsSlice.reducer;

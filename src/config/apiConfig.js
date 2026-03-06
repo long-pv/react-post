@@ -7,6 +7,10 @@ export const apiConfig = {
     },
     products: {
         listPath: import.meta.env.VITE_PRODUCTS_PATH || '/ecommerce/api/products',
+        categoriesPath:
+            import.meta.env.VITE_PRODUCT_CATEGORIES_PATH || '/ecommerce/api/products/categories',
+        byCategoryPath:
+            import.meta.env.VITE_PRODUCTS_BY_CATEGORY_PATH || '/ecommerce/api/products/category/{category}',
     },
     carts: {
         listPath: import.meta.env.VITE_CARTS_PATH || '/ecommerce/api/carts',
