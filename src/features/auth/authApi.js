@@ -15,3 +15,12 @@ export const logoutRequest = async () => {
     const response = await axiosClient.post(authConfig.logoutPath);
     return response.data;
 };
+
+
+export const fetchUsersRequest = async (params = {}) => {
+    const response = await axiosClient.get(authConfig.registerPath, { params });
+    if (Array.isArray(response.data)) return response.data;
+    if (Array.isArray(response.data?.data)) return response.data.data;
+    if (Array.isArray(response.data?.users)) return response.data.users;
+    return [];
+};

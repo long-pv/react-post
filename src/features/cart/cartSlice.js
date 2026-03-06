@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { USER_KEY } from '../../constants/storageKeys';
-import { extractUserIdFromToken } from '../../utils/authToken';
+import { fetchUsersRequest } from '../auth/authApi';
+import { extractUserIdFromToken, extractUsernameFromToken } from '../../utils/authToken';
 import {
     createCartRequest,
     deleteCartRequest,
@@ -46,6 +47,37 @@ const resolveUserIdFromState = (state) => {
     );
 };
 
+
+const resolveUsernameFromState = (state) => {
+    const storedUserRaw = localStorage.getItem(USER_KEY);
+    const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null;
+
+    return (
+        state.auth.user?.username ||
+        state.auth.user?.email ||
+        storedUser?.username ||
+        storedUser?.email ||
+        extractUsernameFromToken(state.auth.token) ||
+        null
+    );
+};
+
+const resolveUserIdForServerRequest = async (state) => {
+    const resolvedUserId = resolveUserIdFromState(state);
+    if (resolvedUserId) return resolvedUserId;
+
+    const username = resolveUsernameFromState(state);
+    if (!username) return null;
+
+    try {
+        const users = await fetchUsersRequest({ username });
+        const matchedUser = users.find((user) => user?.username === username || user?.email === username) || users[0];
+        return matchedUser?.id || matchedUser?.userId || null;
+    } catch {
+        return null;
+    }
+};
+
 export const fetchAllCarts = createAsyncThunk('cart/fetchAllCarts', async (params, thunkAPI) => {
     try {
         return await fetchAllCartsRequest(params || {});
@@ -79,7 +111,7 @@ export const fetchMyCarts = createAsyncThunk('cart/fetchMyCarts', async (userId,
 export const fetchOwnCarts = createAsyncThunk('cart/fetchOwnCarts', async (_, thunkAPI) => {
     const state = thunkAPI.getState();
     const token = state.auth.token;
-    const resolvedUserId = resolveUserIdFromState(state);
+    const resolvedUserId = await resolveUserIdForServerRequest(state);
 
     if (!token || !resolvedUserId) {
         return thunkAPI.rejectWithValue('Bạn cần đăng nhập để xem cart của mình');
@@ -99,7 +131,7 @@ export const syncCart = createAsyncThunk('cart/syncCart', async (options, thunkA
     const token = state.auth.token;
     const items = state.cart.items;
     const forceCreate = Boolean(options?.forceCreate);
-    const resolvedUserId = resolveUserIdFromState(state);
+    const resolvedUserId = await resolveUserIdForServerRequest(state);
 
     if (!token || !resolvedUserId) {
         return thunkAPI.rejectWithValue('Cần đăng nhập để đồng bộ cart lên server');

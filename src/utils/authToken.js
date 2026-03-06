@@ -46,3 +46,8 @@ export const extractUserFromToken = (token) => {
         ...(email ? { email } : {}),
     };
 };
+
+export const extractUsernameFromToken = (token) => {
+    const payload = decodeJwtPayload(token);
+    return payload?.username ?? payload?.preferred_username ?? payload?.name ?? null;
+};

@@ -41,7 +41,16 @@ const normalizeAuthData = (responseData) => {
 export const login = createAsyncThunk('auth/login', async (payload, thunkAPI) => {
     try {
         const responseData = await loginRequest(payload);
-        return normalizeAuthData(responseData);
+        const normalized = normalizeAuthData(responseData);
+
+        if (!normalized.user && payload?.username) {
+            normalized.user = {
+                username: payload.username,
+                name: payload.username,
+            };
+        }
+
+        return normalized;
     } catch (error) {
         return thunkAPI.rejectWithValue(error?.response?.data?.message || 'Đăng nhập thất bại');
     }
