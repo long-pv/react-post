@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { USER_KEY } from '../../constants/storageKeys';
+import { extractUserIdFromToken } from '../../utils/authToken';
 import {
     createCartRequest,
     deleteCartRequest,
@@ -40,6 +41,7 @@ const resolveUserIdFromState = (state) => {
         state.auth.user?.userId ||
         storedUser?.id ||
         storedUser?.userId ||
+        extractUserIdFromToken(state.auth.token) ||
         null
     );
 };

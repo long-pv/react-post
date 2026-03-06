@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { loginRequest, registerRequest, logoutRequest } from './authApi';
 import { ACCESS_TOKEN_KEY, USER_KEY } from '../../constants/storageKeys';
+import { extractUserFromToken } from '../../utils/authToken';
 
 const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
 const storedUser = localStorage.getItem(USER_KEY);
@@ -31,7 +32,8 @@ const normalizeAuthData = (responseData) => {
                   email: responseData.email,
                   name: responseData.name || responseData.firstName,
               }
-            : null);
+            : null) ||
+        extractUserFromToken(token);
 
     return { token, user };
 };
